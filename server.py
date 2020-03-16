@@ -78,4 +78,4 @@ if __name__ == '__main__':
      #app.run(host='0.0.0.0', port=5000)
      #app.run(debug=True) #runs on default port 5000
      #server.run(debug=True, use_reloader=False)
-     server.run_server()
+     server.run()
