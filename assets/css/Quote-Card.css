@@ -36,6 +36,8 @@
   font-weight: normal;
 }
 
+.quotes {display: none;}
+
 .quote-card:after {
   font-family: Georgia, serif;
   content: "”";
@@ -54,4 +56,3 @@
     right: -25px;
   }
 }
-

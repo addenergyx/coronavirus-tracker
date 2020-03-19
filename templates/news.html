@@ -91,7 +91,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="block-content">                   
                     {% for key,value in newsa.iterrows() %}
                     <div class="clean-blog-post">
-                        <div class="row">
+                        <div class="row" onclick="window.open('{{ value['Url'] }}','mywindow');">
                             <div class="col-lg-5"><img class="rounded img-fluid" src="{{ value['urlToImage'] }}"></div>
                             <div class="col-lg-7">
                                 <h3>{{ value['Title'] }}</h3>
