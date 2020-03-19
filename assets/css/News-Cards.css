@@ -1,3 +1,6 @@
+.news-tile:hover {
+    background-color: rgba(6,137,232,0.18);
+}
 .snip1527 {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
   color: #ffffff;
