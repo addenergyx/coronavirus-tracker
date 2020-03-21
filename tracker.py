@@ -315,8 +315,7 @@ app.layout = html.Div(children=[
         dcc.Graph(
             id='time-series-confirmed',
         )
-    ],style={'padding': 40},
- ),
+    ],style={'padding': 40}),
     
     html.Div(id='slider-output-container', style={'color':'white'}),
     
@@ -468,7 +467,11 @@ def update_timne_series(unix_date):
     #unix_date=1580256000
     
     ## In unix use - to remove leading 0 e.g %-m/%-d/%y
-    date=datetime.datetime.fromtimestamp(unix_date).strftime("%#m/%#d/%y")
+    if os.name == 'nt':
+        date=datetime.datetime.fromtimestamp(unix_date).strftime("%#m/%#d/%y")
+    else:
+      date=datetime.datetime.fromtimestamp(unix_date).strftime("%-m/%-d/%y")
+      
     listy = []
     
     for a in time_scale:
