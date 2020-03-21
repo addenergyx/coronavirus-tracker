@@ -11,16 +11,56 @@ import os
 
 df = pd.read_csv('data.csv')
 old_df = pd.read_csv('old_data.csv')
-## Cleanup data
+ts_confirmed= pd.read_csv('time_series_19-covid-Confirmed.csv')
+ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
+ts_death= pd.read_csv('time_series_19-covid-Deaths.csv')
 
-for index, row in df.iterrows():
+
+def clean_data(frame):
+    for index, row in frame.iterrows():
       if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
-          df['Province/State'][index] = None
+          frame['Province/State'][index] = None
+    
+    city_country = np.array(frame['Province/State'] + ", " + frame['Country/Region'] )
+    frame["City/Country"] = city_country
+    #df['Province/State'].fillna(df['Country/Region'], inplace=True)
+    frame['City/Country'].fillna(frame['Country/Region'], inplace=True)
 
-city_country = np.array(df['Province/State'] + ", " + df['Country/Region'] )
-df["City/Country"] = city_country
-#df['Province/State'].fillna(df['Country/Region'], inplace=True)
-df['City/Country'].fillna(df['Country/Region'], inplace=True)
+clean_data(ts_confirmed)
+clean_data(ts_death)
+clean_data(ts_recovered)
+clean_data(df)
+
+import time
+import datetime
+time_scale = ts_confirmed.columns[4:-1]
+result = {}
+'''
+Dash does not support datetime objects by default.
+You can solve this issue by converting your datetime object into an unix timestamp.
+'''
+time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
+
+def getMarks(start, end, Nth=4):
+    ''' Returns the marks for labeling. 
+        Every Nth value will be used.
+    '''
+    result = {}
+    for i, date in enumerate(time_scale):
+        if(i%Nth == 1):
+            # Append value to dict
+            result[time_scale_unix[i]] = time_scale[i]
+    return result
+
+# ## Cleanup data
+# for index, row in df.iterrows():
+#       if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
+#           df['Province/State'][index] = None
+
+# city_country = np.array(df['Province/State'] + ", " + df['Country/Region'] )
+# df["City/Country"] = city_country
+# #df['Province/State'].fillna(df['Country/Region'], inplace=True)
+# df['City/Country'].fillna(df['Country/Region'], inplace=True)
 
 total_deaths = df['Deaths'].sum(axis = 0, skipna = True)
 total_recovered = df['Recovered'].sum(axis = 0, skipna = True)
@@ -31,9 +71,9 @@ old_total_recovered = old_df['Recovered'].sum(axis = 0, skipna = True)
 old_total_cases = old_df['Confirmed'].sum(axis = 0, skipna = True)
 
 ## Change in stats
-death_change = total_deaths - old_total_deaths
-recovery_change = total_recovered - old_total_recovered
-cases_change = total_cases - old_total_cases
+# death_change = total_deaths - old_total_deaths
+# recovery_change = total_recovered - old_total_recovered
+# cases_change = total_cases - old_total_cases
 
 import dash_table
 
@@ -201,13 +241,6 @@ colors = {
     'text': '#FFFFFF'
 }
 
-# dropdown_style = {
-#         'border': '1px solid white',
-#         'background': '#82caff',
-#         'width': '50%', 
-#         'display':'inline-block'
-# }
-
 app.layout = html.Div(children=[
     html.Div([navbar], style={'backgroundColor':'transparent'}),
     
@@ -215,7 +248,7 @@ app.layout = html.Div(children=[
                                 style={'border':'1px solid #FFFFFF',
                                        'padding':'20px',
                                        'width':'40%',
-                                       'color':'#FFF',
+                                       'color':'#FFFFFF',
                                        'text-align':'center'
                                        }
                                 )
@@ -264,6 +297,28 @@ app.layout = html.Div(children=[
     #     ]
     # ),
     
+    ##TIME SCALE
+    html.Div([
+        dcc.Slider(
+            id='time-frame',
+            min = time_scale_unix[0],
+            max = time_scale_unix[-1],
+            value = time_scale_unix[-1],
+            #updatemode='drag',
+            #tooltip = { 'always_visible': True },
+            marks=getMarks(time_scale[0],time_scale[-1]),
+            step=1,
+            )
+    ]),
+    
+    html.Div([
+        dcc.Graph(
+            id='time-series-confirmed',
+        )
+    ],style={'padding': 40},
+ ),
+    
+    html.Div(id='slider-output-container', style={'color':'white'}),
     
     ## DROPDOWN ROW
     html.Div([
@@ -272,8 +327,8 @@ app.layout = html.Div(children=[
                 dbc.Col(dcc.Dropdown( 
                 id='nation',
                 options=nation_options,
-                value='Worldwide',
-                #multi=True
+                value=['Worldwide'],
+                multi=True
                 #style=dropdown_style
                 )),
                 dbc.Col(dcc.Dropdown( 
@@ -296,66 +351,208 @@ app.layout = html.Div(children=[
     ]),
     
     html.Div([
-        dbc.Row(
-            [ 
-                dbc.Col(
-                    dcc.Graph(
-                        id='corona-map',
-                        #figure=fig,
-                        style={'margin' : '0'}        
-                    ),
-                ),       
-                dbc.Col(
-                    dash_table.DataTable(
-                        id='datatable-interactivity',
-                        columns=[
-                            {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
-                        ],
-                        data=df.to_dict('records'),
-                        hidden_columns = ["Latitude","Longitude",'City/Country', 'Last Update'],
-                        filter_action="native",
-                        sort_action="native",
-                        sort_mode="multi",
-                        column_selectable="single",
-                        # row_selectable="multi",
-                        # row_deletable=True,
-                        # selected_columns=[],
-                        # selected_rows=[],
-                        page_action="native",
-                        # page_current= 0,
-                        # page_size= 20,
-                        style_table={'color': 'white','overflowY': 'scroll'},
-                        style_data={'color':'white'},
-                        style_header={'backgroundColor': 'rgb(30, 30, 30)'},
-                        style_cell={
-                            'backgroundColor': 'rgb(50, 50, 50)',
-                            'color': 'white',
-                            'minWidth': '80px', 'width': '80px', 'maxWidth': '100px', 'font_size': '20px'
-                        },
-                        #style_cell={'minWidth': '80px', 'width': '80px', 'maxWidth': '80px', 'font_size': '20px',},
-                        fixed_rows={ 'headers': True, 'data': 0 }
-                    ),
-                ),
-            ], style={'padding-top': '50px'}),
+      dcc.Graph(
+        id='corona-map',
+        #figure=fig,
+        style={'margin' : '0'}        
+      ),
     ]),
     
-    html.Div([
-        html.H3("Coronavirus News", style={'color': colors['text']}),
-        generate_html_table()
-    ], className='col-3'),
+    # html.Div([
+    #     dbc.Row(
+    #         [ 
+    #             dbc.Col(
+    #                 dcc.Graph(
+    #                     id='corona-map',
+    #                     #figure=fig,
+    #                     style={'margin' : '0'}        
+    #                 ),
+    #             ),       
+    #             dbc.Col(
+    #                 dash_table.DataTable(
+    #                     id='datatable-interactivity',
+    #                     columns=[
+    #                         {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
+    #                     ],
+    #                     data=df.to_dict('records'),
+    #                     hidden_columns = ["Latitude","Longitude",'City/Country', 'Last Update'],
+    #                     filter_action="native",
+    #                     sort_action="native",
+    #                     sort_mode="multi",
+    #                     column_selectable="single",
+    #                     # row_selectable="multi",
+    #                     # row_deletable=True,
+    #                     # selected_columns=[],
+    #                     # selected_rows=[],
+    #                     page_action="native",
+    #                     # page_current= 0,
+    #                     # page_size= 20,
+    #                     style_table={'color': 'white','overflowY': 'scroll'},
+    #                     style_data={'color':'white'},
+    #                     style_header={'backgroundColor': 'rgb(30, 30, 30)'},
+    #                     style_cell={
+    #                         'backgroundColor': 'rgb(50, 50, 50)',
+    #                         'color': 'white',
+    #                         'minWidth': '80px', 'width': '80px', 'maxWidth': '100px', 'font_size': '20px'
+    #                     },
+    #                     #style_cell={'minWidth': '80px', 'width': '80px', 'maxWidth': '80px', 'font_size': '20px',},
+    #                     fixed_rows={ 'headers': True, 'data': 0 }
+    #                 ),
+    #             ),
+    #         ], style={'padding-top': '50px'}),
+    # ]),
+    
+    # html.Div([
+    #     html.H3("Coronavirus News", style={'color': colors['text']}),
+    #     generate_html_table()
+    # ], className='col-3'),
+    
+    # ABOUT ROW
+    html.Div(
+        className='row',
+        children=[
+          html.Div(
+            className='col',
+            children=[
+              html.P(
+                'Data source:',style={'color': colors['text']}
+              ),
+              html.A(
+                  'Johns Hopkins CSSE',
+                  href='https://github.com/CSSEGISandData/COVID-19'
+              )                    
+            ]
+          ),
+          html.Div(
+            className='col',
+            children=[
+              html.P(
+                'Code avaliable at:',style={'color': colors['text']}
+              ),
+              html.A(
+                  'Github',
+                  href='https://github.com/addenergyx/coronavirus-tracker'
+              )                    
+            ]
+          ),
+          html.Div(
+            className='col',
+            children=[
+              html.P(
+                'Made with:', style={'color': colors['text']}
+              ),
+              html.A(
+                  'Dash / Plot.ly',
+                  href='https://plot.ly/dash/'
+              )                    
+            ]
+          ),                                                         
+        ],        
+        style={
+            'padding': 40
+        }
+    ) 
     
     #html.Div(id='datatable-interactivity-container')
   ], style={'backgroundColor': colors['background']})
 
+import plotly.graph_objs as go
+
+# @app.callback(Output('slider-output-container', 'children'), [Input('time-frame','value')])
+# def test(unix_date):
+#     return 'You have selected "{}"'.format(datetime.datetime.fromtimestamp(unix_date).strftime("%m/%d/%y"))
+
+@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
+def update_timne_series(unix_date):    
+    
+    #unix_date=1580256000
+    
+    ## In unix use - to remove leading 0 e.g %-m/%-d/%y
+    date=datetime.datetime.fromtimestamp(unix_date).strftime("%#m/%#d/%y")
+    listy = []
+    
+    for a in time_scale:
+        listy.append(a)
+        #print(a +' ? '+ date)
+        if a == date:
+            #print('-------------------------')
+            break
+    
+    listy.insert(0,'City/Country')
+    
+    #for individual countries    
+    # filtered_ts_confirmed = ts_confirmed[listy]
+    # filtered_ts_death = ts_death[listy]
+    # filtered_ts_recovered = ts_recovered[listy]
+    #filtered_ts_df = ts_confirmed[['City/Country','3/3/20']]
+    
+    
+    ## Total events on given day
+    filtered_ts_confirmed = ts_confirmed[listy[1:]].sum()
+    filtered_ts_death = ts_death[listy[1:]].sum()
+    filtered_ts_recovered = ts_recovered[listy[1:]].sum()
+    
+    trace0 = go.Scatter(x=listy[1:], y=filtered_ts_confirmed,
+                        mode='lines',
+                        name='Confirrmed',
+                        line = {'color':'#0275d8'}
+                        )
+    
+    trace1 = go.Scatter(x=listy[1:], y=filtered_ts_death,
+                    mode='lines',
+                    name='Deaths',
+                    line = {'color':'#d9534f'}
+                    )
+
+    trace2 = go.Scatter(x=listy[1:], y=filtered_ts_recovered,
+                    mode='lines',
+                    name='Recovered',
+                    line = {'color':'#5cb85c'}
+                    )
+    
+    data = [trace0, trace1, trace2]
+    
+    layout = go.Layout(paper_bgcolor='rgba(0,0,0,0)',
+                       plot_bgcolor='rgba(0,0,0,0)',
+                       font={
+                            'family': 'Courier New, monospace',
+                            'size': 18,
+                            'color': 'white'
+                            },
+                       xaxis={'gridcolor':'rgb(46,47,47)','autorange': True,},
+                       yaxis={'gridcolor':'rgb(46,47,47)','autorange': True,'title':'Number of cases'},
+                       hovermode='closest'
+                       )
+    
+    fig = go.Figure(data=data, layout=layout)
+    
+    fig.update_layout(
+    legend=dict(
+        x=0.01,
+        y=1,
+        traceorder="normal",
+        font=dict(
+            family="sans-serif",
+            size=12,
+            color="#f7f7f7"
+        ),
+        bgcolor="#292b2c",
+        bordercolor="#f7f7f7",
+        borderwidth=2,
+    )
+)
+
+    return fig
+                                      
 @app.callback(Output('corona-map', 'figure'), [Input('nation','value'), Input('case','value'), 
                                                Input('exclude-china','value')])
 def update_map(selected_nation, selected_case, click):
     #selected_nation='US'
-    zoom = 3
+    zoom = 3    
     
-    filtered_df = df[df['Country/Region']==selected_nation] # Country Dropdown
+    filtered_df = df[df['Country/Region'].isin(selected_nation)] # Country Dropdown
     
-    if selected_nation == 'Worldwide' or selected_nation == None: # Case Dropdown
+    if 'Worldwide' in selected_nation or not selected_nation: # Case Dropdown
         filtered_df = df
         zoom = 2
     
