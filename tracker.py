@@ -188,11 +188,11 @@ recovered_card = [
 cards = html.Div([
         dbc.Row(
             [
-                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True)),
-                dbc.Col(dbc.Card(death_card, color="danger", inverse=True)),
-                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True)),
+                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px'}),width=12,lg=4),
+                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px'}),width=12,lg=4),
+                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px'}),width=12,lg=4),
             ],
-            className="mb-4",
+            no_gutters=True
         ),
     ])
 
@@ -230,7 +230,7 @@ app.layout = html.Div(children=[
                                       'justify-content': 'center'
                                       }),
         
-    html.Div([cards],className="mb-4"),
+    html.Div([cards], className="mb-4"),
     
     # html.Div([
     #     html.H2('Total Confirmed: {}'.format(total_cases), style={'color':'blue', 'display':'inline-block', 'width': '33%', 'textAlign':'center'}),
@@ -407,8 +407,8 @@ def update_map(selected_nation, selected_case, click):
     return fig
 
 if __name__ == '__main__':
-    #app.run_server(debug=True, use_reloader=False)
-    app.run_server()
+    app.run_server(debug=True, use_reloader=False)
+    #app.run_server()
 
 
 
