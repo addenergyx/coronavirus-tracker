@@ -9,12 +9,12 @@ import pandas as pd
 import numpy as np
 import os
 
+#Data files
 df = pd.read_csv('data.csv')
 old_df = pd.read_csv('old_data.csv')
 ts_confirmed= pd.read_csv('time_series_19-covid-Confirmed.csv')
 ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
 ts_death= pd.read_csv('time_series_19-covid-Deaths.csv')
-
 
 def clean_data(frame):
     for index, row in frame.iterrows():
@@ -74,6 +74,24 @@ old_total_cases = old_df['Confirmed'].sum(axis = 0, skipna = True)
 # death_change = total_deaths - old_total_deaths
 # recovery_change = total_recovered - old_total_recovered
 # cases_change = total_cases - old_total_cases
+
+import requests as req
+import re
+
+def get_num_countries_affected():
+    
+    resp = req.get("https://www.worldometers.info/coronavirus/")
+    
+    pattern = '(\d+) countries'
+    
+    content = resp.text
+    
+    stripped = re.sub('<[^<]+?>', '', content)
+    
+    a = re.search(pattern, stripped)
+    
+    return a.group(1)
+    
 
 import dash_table
 
@@ -161,16 +179,19 @@ app = dash.Dash(name='tracker', server=server, url_base_pathname='/tracker/', ex
 #     </head>
 #     <body>
 #         <div></div>
-#         {%app_entry%}
-#         <footer>
-#             {%config%}
-#             {%scripts%}
-#             {%renderer%}
+#        {%app_entry%}
+#         <footer> 
+#           {%config%} 
+#              {%scripts%} 
+#          {%renderer%}
 #         </footer>
-#         <div>My Custom footer</div>
 #     </body>
 # </html>
 # '''
+
+# app.scripts.append_script({
+# 'external_url': 'https://cdn.rawgit.com/cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js'
+# })
 
 app.title = 'Coranavirus Tracker'
 
@@ -184,7 +205,7 @@ nation_options.append({'label':'Worldwide', 'value': 'Worldwide'})
 navbar = dbc.NavbarSimple( 
     #id='navbar',
     children=[
-        dbc.NavItem(dbc.NavLink("Home", href="../", external_link=True, className='col-8')),
+        dbc.NavItem(dbc.NavLink("Home", href="../", external_link=True,)),
         dbc.NavItem(dbc.NavLink("Latest News", href="../news", external_link=True)),
         dbc.NavItem(dbc.NavLink("Audiobooks", href="../books", external_link=True)),
     ],
@@ -192,7 +213,10 @@ navbar = dbc.NavbarSimple(
     brand_href="../",
     expand=True,
     dark=True,
-    className='navbar-transparent bg-transparent'
+    color='default',
+    sticky="top",
+    fluid=True,
+    #className=" bg-transparent",
 )
 
 confirmed_card = [
@@ -225,12 +249,24 @@ recovered_card = [
     ),
 ]
 
+affected_card = [
+    dbc.CardHeader("Total Infected Countries", style={'textAlign':'center'}),
+    dbc.CardBody(
+        [
+            html.H2(get_num_countries_affected()+"/195", className="card-title", style={'textAlign':'center'}),
+            html.Br(),
+            #html.P("   ",className="card-text"),
+        ]
+    ),
+]
+
 cards = html.Div([
         dbc.Row(
             [
-                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px'}),width=12,lg=4),
-                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px'}),width=12,lg=4),
-                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px'}),width=12,lg=4),
+                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px'}),width=12,lg=3),
+                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px'}),width=12,lg=3),
+                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px'}),width=12,lg=3),
+                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px'}),width=12,lg=3),
             ],
             no_gutters=True
         ),
@@ -242,9 +278,11 @@ colors = {
 }
 
 app.layout = html.Div(children=[
-    html.Div([navbar], style={'backgroundColor':'transparent'}),
+        
+    html.Div([navbar], #style={'backgroundColor':'transparent'}
+             ),
     
-    html.Div(children=[ html.H1('Coronavirus (COVID-19) Global Tracker', 
+    html.Div(children=[ html.H1('Coronavirus (COVID-19) Global Tracker',
                                 style={'border':'1px solid #FFFFFF',
                                        'padding':'20px',
                                        'width':'40%',
@@ -252,8 +290,7 @@ app.layout = html.Div(children=[
                                        'text-align':'center'
                                        }
                                 )
-        ],className='section', style={'height':'65vh',
-                                      'min-height':'65vh',
+        ],className='section splash', style={
                                       'background-image': 'linear-gradient(to top, #191A1A 0%, transparent 75%), url(https://pmcdeadline2.files.wordpress.com/2020/03/coronavirus.jpg)',
                                       #'background-position': 'center center',
                                       'background-repeat': 'no-repeat', # By default, a background image will repeat indefinitely, both vertically and horizontally
@@ -264,7 +301,7 @@ app.layout = html.Div(children=[
                                       }),
         
     html.Div([cards], className="mb-4"),
-    
+        
     # html.Div([
     #     html.H2('Total Confirmed: {}'.format(total_cases), style={'color':'blue', 'display':'inline-block', 'width': '33%', 'textAlign':'center'}),
     #     html.H2('Total Deaths: {}'.format(total_deaths), style={'color':'red', 'display':'inline-block', 'width': '33%', 'textAlign':'center'}),
@@ -315,7 +352,9 @@ app.layout = html.Div(children=[
         dcc.Graph(
             id='time-series-confirmed',
         )
-    ],style={'padding': 40}),
+    ],style={'padding-bottom': 40,
+             'padding-right': 40,
+             'padding-left': 40,}),
     
     html.Div(id='slider-output-container', style={'color':'white'}),
     
@@ -607,8 +646,8 @@ def update_map(selected_nation, selected_case, click):
     return fig
 
 if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
-    #app.run_server()
+    #app.run_server(debug=True, use_reloader=False)
+    app.run_server()
 
 
 

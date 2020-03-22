@@ -1,3 +1,8 @@
+.section.splash {
+  height: 65vh;
+  min-height: 65vh;
+}
+
 .parallax {
   /* Full height */
   height: 100%;
@@ -6,4 +11,18 @@
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+}
+
+@media (max-width: 577px) {
+.section.splash{
+    height: 35vh;
+    min-height: 35vh;
+  }
+}
+
+@media (max-width: 380px) {
+.section.splash {
+    height: 25vh;
+    min-height: 25vh;
+  }
 }

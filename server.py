@@ -74,6 +74,10 @@ def news():
 def tracker():
     return redirect('/tracker/')
 
+@server.route('/map')
+def mapout():
+    return redirect('/map/')
+
 if __name__ == '__main__':
      #app.run(host='0.0.0.0', port=5000)
      #app.run(debug=True) #runs on default port 5000
