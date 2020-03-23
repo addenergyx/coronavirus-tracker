@@ -167,31 +167,37 @@ from dash.dependencies import Input, Output
 #external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css','https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
 external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP]
 
-app = dash.Dash(name='tracker', server=server, url_base_pathname='/tracker/', external_stylesheets=external_stylesheets )
+app = dash.Dash(name='tracker', server=server, url_base_pathname='/tracker/', external_stylesheets=external_stylesheets, 
+                meta_tags=[
+                    #{ 'name':'viewport','content':'width=device-width, initial-scale=1' },## Fixes media query not showing
+                    {
+                        'name': 'description',
+                        'content': 'This dashboard is designed to monitor events, deaths, and recoveries reported by serveral sources such as WHO and Johns Hopkins University on the n-Cov (Coronavirus). This constantly searches repositories and reviews all countries case studies.'
+                    },
+                ] 
+            )
 
-### Bootstrap doesn't like this code, find fix for buy me a coffee widget
-# app.index_string = '''
-# <!DOCTYPE html>
-# <html>
-#     <head>
-#         <script data-name="BMC-Widget" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="addenergyx" data-description="Support me on Buy me a coffee!" 
-#         data-message="Thank you for visiting. Please support this project" data-color="#FF813F" data-position="right" data-x_margin="18" data-y_margin="18"></script>
-#     </head>
-#     <body>
-#         <div></div>
-#        {%app_entry%}
-#         <footer> 
-#           {%config%} 
-#              {%scripts%} 
-#          {%renderer%}
-#         </footer>
-#     </body>
-# </html>
-# '''
-
-# app.scripts.append_script({
-# 'external_url': 'https://cdn.rawgit.com/cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js'
-# })
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <script data-name="BMC-Widget" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="addenergyx" data-description="Support me on Buy me a coffee!" 
+        data-message="Thank you for visiting. Please support this project" data-color="#FF813F" data-position="right" data-x_margin="18" data-y_margin="18"></script>
+        {%css%}
+        {%favicon%}
+    </head>
+    <body>
+        <div></div>
+        {%app_entry%}
+        <footer> 
+          {%config%} 
+          {%scripts%} 
+          {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
 
 app.title = 'Coranavirus Tracker'
 
@@ -290,9 +296,9 @@ app.layout = html.Div(children=[
                                        'text-align':'center'
                                        }
                                 )
-        ],className='section splash', style={
+        ],className='splash', style={
                                       'background-image': 'linear-gradient(to top, #191A1A 0%, transparent 75%), url(https://pmcdeadline2.files.wordpress.com/2020/03/coronavirus.jpg)',
-                                      #'background-position': 'center center',
+                                      'background-position': 'center center',
                                       'background-repeat': 'no-repeat', # By default, a background image will repeat indefinitely, both vertically and horizontally
                                       'background-size' : 'cover',
                                       'display':'flex',
