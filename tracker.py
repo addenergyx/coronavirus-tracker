@@ -202,8 +202,8 @@ app.index_string = '''
 app.title = 'Coranavirus Tracker'
 
 nation_options = []
-nations = df['Country/Region'].unique()
-for nation in df['Country/Region'].unique():
+nations = ts_confirmed['Country/Region'].unique()
+for nation in ts_confirmed['Country/Region'].unique():
     nation_options.append({'label':str(nation), 'value': nation})
 nation_options.append({'label':'Worldwide', 'value': 'Worldwide'})
 
@@ -377,8 +377,14 @@ app.layout = html.Div(children=[
                 )),
                 dbc.Col(dcc.Dropdown( 
                     id='case',
-                    options=[{'label':i,'value':i} for i in df.columns[3:6] ],
-                    value='Confirmed',
+                    #options=[{'label':i,'value':i} for i in df.columns[3:6]], #for data.csv
+                    options=[
+                        {'label':'All','value':'All'},
+                        {'label':'Confirmed','value':'Confirmed'},
+                        {'label':'Deaths','value':'Deaths'},
+                        {'label':'Recovered','value':'Recovered'},
+                    ],
+                    value='All',
                     className='dropdown',
                     searchable=False,
                     #style=dropdown_style
@@ -506,16 +512,20 @@ import plotly.graph_objs as go
 # def test(unix_date):
 #     return 'You have selected "{}"'.format(datetime.datetime.fromtimestamp(unix_date).strftime("%m/%d/%y"))
 
-@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
-def update_timne_series(unix_date):    
-    
-    #unix_date=1580256000
-    
+def unix_to_date(unix_date):
     ## In unix use - to remove leading 0 e.g %-m/%-d/%y
     if os.name == 'nt':
         date=datetime.datetime.fromtimestamp(unix_date).strftime("%#m/%#d/%y")
     else:
-      date=datetime.datetime.fromtimestamp(unix_date).strftime("%-m/%-d/%y")
+        date=datetime.datetime.fromtimestamp(unix_date).strftime("%-m/%-d/%y")     
+    return date
+
+@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
+def update_time_series(unix_date):    
+    
+    #unix_date=1580256000
+    
+    date = unix_to_date(unix_date)
       
     listy = []
     
@@ -593,38 +603,65 @@ def update_timne_series(unix_date):
     return fig
                                       
 @app.callback(Output('corona-map', 'figure'), [Input('nation','value'), Input('case','value'), 
-                                               Input('exclude-china','value')])
-def update_map(selected_nation, selected_case, click):
-    #selected_nation='US'
+                                               Input('exclude-china','value'), Input('time-frame','value')])
+def update_map(selected_nation, selected_case, click, unix_date):
+    
+    #unix_date=1580256000
+    #selected_nation=['Worldwide']
+    
+    date = unix_to_date(unix_date)
+    
     zoom = 3    
     
-    filtered_df = df[df['Country/Region'].isin(selected_nation)] # Country Dropdown
-    
-    if 'Worldwide' in selected_nation or not selected_nation: # Case Dropdown
+    ## Country Dropdown
+    if 'Worldwide' in selected_nation or not selected_nation: 
         filtered_df = df
+        filtered_ts_confirmed = ts_confirmed
+        filtered_ts_death = ts_death
+        filtered_ts_recovered = ts_recovered
         zoom = 2
+    else:
+        filtered_df = df[df['Country/Region'].isin(selected_nation)] 
+        filtered_ts_confirmed = ts_confirmed[ts_confirmed['Country/Region'].isin(selected_nation)]
+        filtered_ts_death = ts_death[ts_death['Country/Region'].isin(selected_nation)]
+        filtered_ts_recovered = ts_recovered[ts_recovered['Country/Region'].isin(selected_nation)]
     
-    if not click:
-        filtered_df = filtered_df[filtered_df['Country/Region'] != 'China'] # China Checkbox
+    ## China Checkbox
+    if not click: 
+        filtered_df = filtered_df[filtered_df['Country/Region'] != 'China'] 
+        filtered_ts_confirmed = filtered_ts_confirmed[filtered_ts_confirmed['Country/Region'] != 'China']
+        filtered_ts_death = filtered_ts_death[filtered_ts_death['Country/Region'] != 'China']
+        filtered_ts_recovered = filtered_ts_recovered[filtered_ts_recovered['Country/Region'] != 'China']
     
     px.set_mapbox_access_token(mapbox_access_token)
         
+    ## Rename columns to prettify hover data
+    temp_deaths_df = filtered_ts_death.rename(columns = {date:'Deaths', 'Lat':'Latitude', 'Long':'Longitude'})
+    temp_recovered_df = filtered_ts_recovered.rename(columns = {date:'Recovered', 'Lat':'Latitude', 'Long':'Longitude'})
+    temp_confirmed_df = filtered_ts_confirmed.rename(columns = {date:'Confirmed', 'Lat':'Latitude', 'Long':'Longitude'})
+    
+    #assumes order of countries from datasets are the same
+    temp_all = temp_confirmed_df[['City/Country', 'Confirmed','Latitude','Longitude']]
+    temp_all.insert(2,'Deaths', temp_deaths_df[['Deaths']])
+    temp_all.insert(2,'Recovered',temp_recovered_df[['Recovered']])
+    
     if selected_case == 'Deaths':
-        #filtered_df = filtered_df[['Deaths','Latitude','Longitude','City/Country']]
-        fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", size="Deaths",
-                      size_max=100, hover_name="City/Country",
-                      hover_data=["Deaths"])
+        fig = px.scatter_mapbox(temp_deaths_df, lat="Latitude", lon="Longitude", size='Deaths', size_max=100, hover_name="City/Country")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Red'))
     elif selected_case == 'Recovered':
-        fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", size="Recovered",
-                      size_max=100, hover_name="City/Country",
-                      hover_data=["Confirmed", "Recovered", "Deaths"] )
+        fig = px.scatter_mapbox(temp_recovered_df, lat="Latitude", lon="Longitude", size="Recovered",
+                      size_max=100, hover_name="City/Country")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Green'))
+    elif selected_case == 'Confirmed':
+        fig = px.scatter_mapbox(temp_confirmed_df, lat="Latitude", lon="Longitude", size="Confirmed",
+                      size_max=100, hover_name="City/Country")
+        fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Blue'))
     else:
-        fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", color="Deaths", size="Confirmed",
+        fig = px.scatter_mapbox(temp_all, lat="Latitude", lon="Longitude", color="Deaths", size="Confirmed",
                               #color_continuous_scale=px.colors.diverging.Picnic,
                               size_max=50, hover_name="City/Country",
-                              hover_data=["Confirmed", "Recovered", "Deaths"] )
+                              hover_data=["Confirmed", "Recovered", "Deaths"] 
+                              )
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
     
     fig.update(
@@ -648,6 +685,64 @@ def update_map(selected_nation, selected_case, click):
             zoom=zoom
         ),
     )
+   
+    '''
+    Uses data.csv, no time series remove 'Input('exclude-china','value'), Input('time-frame','value')' from
+    decorator if using code below
+    '''
+    
+    # zoom = 3    
+    
+    # filtered_df = df[df['Country/Region'].isin(selected_nation)] # Country Dropdown
+    
+    # if 'Worldwide' in selected_nation or not selected_nation: # Case Dropdown
+    #     filtered_df = df
+    #     zoom = 2
+    
+    # if not click:
+    #     filtered_df = filtered_df[filtered_df['Country/Region'] != 'China'] # China Checkbox
+    
+    # px.set_mapbox_access_token(mapbox_access_token)
+        
+    # if selected_case == 'Deaths':
+    #     #filtered_df = filtered_df[['Deaths','Latitude','Longitude','City/Country']]
+    #     fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", size="Deaths",
+    #                   size_max=100, hover_name="City/Country",
+    #                   hover_data=["Deaths"])
+    #     fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Red'))
+    # elif selected_case == 'Recovered':
+    #     fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", size="Recovered",
+    #                   size_max=100, hover_name="City/Country",
+    #                   hover_data=["Confirmed", "Recovered", "Deaths"] )
+    #     fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Green'))
+    # else:
+    #     fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", color="Deaths", size="Confirmed",
+    #                           #color_continuous_scale=px.colors.diverging.Picnic,
+    #                           size_max=50, hover_name="City/Country",
+    #                           hover_data=["Confirmed", "Recovered", "Deaths"] )
+    #     fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
+    
+    # fig.update(
+    #         layout=dict(title=dict(x=0.5), paper_bgcolor=colors['background'] )
+    #     )
+    
+    # fig.update_layout(
+    #     autosize=True,
+    #     height=750,
+    #     #width=1500,
+    #     hovermode='closest',
+    #     mapbox=dict(
+    #         accesstoken=mapbox_access_token,
+    #         bearing=0,
+    #         style="dark",
+    #         # center=dict(
+    #         #     lat=56,
+    #         #     lon=324
+    #         # ),
+    #         pitch=0,
+    #         zoom=zoom
+    #     ),
+    # )
     
     return fig
 
