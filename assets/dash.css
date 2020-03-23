@@ -1,6 +1,6 @@
-.section.splash {
-  height: 65vh;
-  min-height: 65vh;
+.splash {
+  height: 50vh;
+  min-height: 50vh;
 }
 
 .parallax {
@@ -14,15 +14,15 @@
 }
 
 @media (max-width: 577px) {
-.section.splash{
-    height: 35vh;
-    min-height: 35vh;
+    .splash{
+        height: 35vh;
+        min-height: 35vh;
   }
 }
 
 @media (max-width: 380px) {
-.section.splash {
-    height: 25vh;
-    min-height: 25vh;
+    .splash {
+        height: 25vh;
+        min-height: 25vh;
   }
 }
