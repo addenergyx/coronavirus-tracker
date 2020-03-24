@@ -70,16 +70,16 @@ def ads_txt():
 def news():
     return render_template('news.html', newsa=update_news())
 
-@server.route('/tracker')
-def tracker():
-    return redirect('/tracker/')
+# @server.route('/tracker')
+# def tracker():
+#     return redirect('/tracker/')
 
-@server.route('/map')
-def mapout():
-    return redirect('/map/')
+# @server.route('/map')
+# def mapout():
+#     return redirect('/map/')
 
-if __name__ == '__main__':
-     #app.run(host='0.0.0.0', port=5000)
-     #app.run(debug=True) #runs on default port 5000
-     #server.run(debug=True, use_reloader=False)
-     server.run()
+# if __name__ == '__main__':
+#      #app.run(host='0.0.0.0', port=5000)
+#      #app.run(debug=True) #runs on default port 5000
+#      #server.run(debug=True, use_reloader=False)
+#      server.run()
