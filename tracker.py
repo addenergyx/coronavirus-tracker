@@ -8,10 +8,10 @@ from server import server
 import pandas as pd
 import numpy as np
 import os
-
+from navbar import Navbar
 #Data files
-df = pd.read_csv('data.csv')
-old_df = pd.read_csv('old_data.csv')
+# df = pd.read_csv('data.csv')
+# old_df = pd.read_csv('old_data.csv')
 ts_confirmed= pd.read_csv('time_series_19-covid-Confirmed.csv')
 ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
 ts_death= pd.read_csv('time_series_19-covid-Deaths.csv')
@@ -29,7 +29,7 @@ def clean_data(frame):
 clean_data(ts_confirmed)
 clean_data(ts_death)
 clean_data(ts_recovered)
-clean_data(df)
+#clean_data(df)
 
 import time
 import datetime
@@ -62,13 +62,20 @@ def getMarks(start, end, Nth=4):
 # #df['Province/State'].fillna(df['Country/Region'], inplace=True)
 # df['City/Country'].fillna(df['Country/Region'], inplace=True)
 
-total_deaths = df['Deaths'].sum(axis = 0, skipna = True)
-total_recovered = df['Recovered'].sum(axis = 0, skipna = True)
-total_cases = df['Confirmed'].sum(axis = 0, skipna = True)
+total_deaths = ts_death.iloc[:,-2].sum(axis = 0, skipna = True)
+total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
+total_cases = ts_confirmed.iloc[:,-2].sum(axis = 0, skipna = True)
 
-old_total_deaths = old_df['Deaths'].sum(axis = 0, skipna = True)
-old_total_recovered = old_df['Recovered'].sum(axis = 0, skipna = True)
-old_total_cases = old_df['Confirmed'].sum(axis = 0, skipna = True)
+old_total_deaths = ts_death.iloc[:,-3].sum(axis = 0, skipna = True)
+old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
+old_total_cases = ts_confirmed.iloc[:,-3].sum(axis = 0, skipna = True)
+
+# total_recovered = df['Recovered'].sum(axis = 0, skipna = True)
+# total_cases = df['Confirmed'].sum(axis = 0, skipna = True)
+
+# old_total_deaths = old_df['Deaths'].sum(axis = 0, skipna = True)
+# old_total_recovered = old_df['Recovered'].sum(axis = 0, skipna = True)
+# old_total_cases = old_df['Confirmed'].sum(axis = 0, skipna = True)
 
 ## Change in stats
 # death_change = total_deaths - old_total_deaths
@@ -98,63 +105,6 @@ import dash_table
 mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
 
 import plotly.express as px
-
-from newsapi import NewsApiClient
-
-def update_news():
-    # Init
-    newsapi = NewsApiClient(api_key=os.getenv('NEWS_API_KEY'))
-    
-    # /v2/top-headlines
-    top_headlines = newsapi.get_top_headlines(q='Coronavirus',
-                                              #sources='google-news',
-                                              language='en',
-                                              country='gb')
-    
-    articles = top_headlines['articles']
-    
-    titles = []
-    urls = []
-    for a in articles:
-        titles.append(a['title'])
-        urls.append(a['url'])
-    
-    d = {'Title':titles,'Url':urls}
-    
-    news_df = pd.DataFrame(d)
-
-    return news_df
-
-def generate_html_table(max_rows=5):
-    news_df = update_news()
-
-    return html.Div(
-        [
-            html.Div(
-                html.Table(
-                    # Header
-                    [html.Tr([html.Th()])]
-                    +
-                    # Body
-                    [
-                        html.Tr(
-                            [
-                                html.Td(
-                                    html.A(
-                                        news_df.iloc[i]["Title"],
-                                        href=news_df.iloc[i]["Url"],
-                                        target="_blank"
-                                    )
-                                )
-                            ]
-                        )
-                        for i in range(min(len(news_df),max_rows))
-                    ]
-                ),
-                style={"height": "300px", "overflowY": "scroll"},
-            ),
-        ],
-        style={"height": "100%"},)
 
 import dash
 import dash_core_components as dcc
@@ -201,6 +151,8 @@ app.index_string = '''
 
 app.title = 'Coranavirus Tracker'
 
+app.config.suppress_callback_exceptions = True
+
 nation_options = []
 nations = ts_confirmed['Country/Region'].unique()
 for nation in ts_confirmed['Country/Region'].unique():
@@ -208,22 +160,22 @@ for nation in ts_confirmed['Country/Region'].unique():
 nation_options.append({'label':'Worldwide', 'value': 'Worldwide'})
 
  
-navbar = dbc.NavbarSimple( 
-    #id='navbar',
-    children=[
-        dbc.NavItem(dbc.NavLink("Home", href="../", external_link=True,)),
-        dbc.NavItem(dbc.NavLink("Latest News", href="../news", external_link=True)),
-        dbc.NavItem(dbc.NavLink("Audiobooks", href="../books", external_link=True)),
-    ],
-    brand="Coronavirus (COVID-19) Global Tracker",
-    brand_href="../",
-    expand=True,
-    dark=True,
-    color='default',
-    sticky="top",
-    fluid=True,
-    #className=" bg-transparent",
-)
+# navbar = dbc.NavbarSimple( 
+#     #id='navbar',
+#     children=[
+#         dbc.NavItem(dbc.NavLink("Home", href="../", external_link=True,)),
+#         dbc.NavItem(dbc.NavLink("Latest News", href="../news", external_link=True)),
+#         dbc.NavItem(dbc.NavLink("Audiobooks", href="../books", external_link=True)),
+#     ],
+#     brand="Coronavirus (COVID-19) Global Tracker",
+#     brand_href="../",
+#     expand=True,
+#     dark=True,
+#     color='default',
+#     sticky="top",
+#     fluid=True,
+#     #className=" bg-transparent",
+# )
 
 confirmed_card = [
     dbc.CardHeader("Total Confirmed Cases", style={'textAlign':'center'}),
@@ -256,7 +208,7 @@ recovered_card = [
 ]
 
 affected_card = [
-    dbc.CardHeader("Total Infected Countries", style={'textAlign':'center'}),
+    dbc.CardHeader("Total Infected countries/territories", style={'textAlign':'center'}),
     dbc.CardBody(
         [
             html.H2(get_num_countries_affected()+"/195", className="card-title", style={'textAlign':'center'}),
@@ -283,11 +235,7 @@ colors = {
     'text': '#FFFFFF'
 }
 
-app.layout = html.Div(children=[
-        
-    html.Div([navbar], #style={'backgroundColor':'transparent'}
-             ),
-    
+body = html.Div([
     html.Div(children=[ html.H1('Coronavirus (COVID-19) Global Tracker',
                                 style={'border':'1px solid #FFFFFF',
                                        'padding':'20px',
@@ -372,8 +320,9 @@ app.layout = html.Div(children=[
                 id='nation',
                 options=nation_options,
                 value=['Worldwide'],
-                multi=True
-                #style=dropdown_style
+                multi=True,
+                #style=dropdown_style,
+                className='dropdown',
                 )),
                 dbc.Col(dcc.Dropdown( 
                     id='case',
@@ -457,7 +406,7 @@ app.layout = html.Div(children=[
     #     generate_html_table()
     # ], className='col-3'),
     
-    # ABOUT ROW
+    # Footer
     html.Div(
         className='row',
         children=[
@@ -503,9 +452,17 @@ app.layout = html.Div(children=[
         }
     ) 
     
-    #html.Div(id='datatable-interactivity-container')
-  ], style={'backgroundColor': colors['background']})
+  ])
 
+def Homepage():
+    layout = html.Div([
+    Navbar(),
+    body
+    ], style={'backgroundColor': colors['background']})
+    return layout
+           
+app.layout = Homepage()
+  
 import plotly.graph_objs as go
 
 # @app.callback(Output('slider-output-container', 'children'), [Input('time-frame','value')])
@@ -545,7 +502,7 @@ def update_time_series(unix_date):
     #filtered_ts_df = ts_confirmed[['City/Country','3/3/20']]
     
     
-    ## Total events on given day
+    ## Total events on a given day
     filtered_ts_confirmed = ts_confirmed[listy[1:]].sum()
     filtered_ts_death = ts_death[listy[1:]].sum()
     filtered_ts_recovered = ts_recovered[listy[1:]].sum()
@@ -615,20 +572,20 @@ def update_map(selected_nation, selected_case, click, unix_date):
     
     ## Country Dropdown
     if 'Worldwide' in selected_nation or not selected_nation: 
-        filtered_df = df
+        #filtered_df = df
         filtered_ts_confirmed = ts_confirmed
         filtered_ts_death = ts_death
         filtered_ts_recovered = ts_recovered
         zoom = 2
     else:
-        filtered_df = df[df['Country/Region'].isin(selected_nation)] 
+        #filtered_df = df[df['Country/Region'].isin(selected_nation)] 
         filtered_ts_confirmed = ts_confirmed[ts_confirmed['Country/Region'].isin(selected_nation)]
         filtered_ts_death = ts_death[ts_death['Country/Region'].isin(selected_nation)]
         filtered_ts_recovered = ts_recovered[ts_recovered['Country/Region'].isin(selected_nation)]
     
     ## China Checkbox
     if not click: 
-        filtered_df = filtered_df[filtered_df['Country/Region'] != 'China'] 
+        #filtered_df = filtered_df[filtered_df['Country/Region'] != 'China'] 
         filtered_ts_confirmed = filtered_ts_confirmed[filtered_ts_confirmed['Country/Region'] != 'China']
         filtered_ts_death = filtered_ts_death[filtered_ts_death['Country/Region'] != 'China']
         filtered_ts_recovered = filtered_ts_recovered[filtered_ts_recovered['Country/Region'] != 'China']
@@ -746,9 +703,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
     
     return fig
 
-if __name__ == '__main__':
-    #app.run_server(debug=True, use_reloader=False)
-    app.run_server()
+# if __name__ == '__main__':
+#     app.run_server(debug=True, use_reloader=False)
+#     #app.run_server()
 
 
 
