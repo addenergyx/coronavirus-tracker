@@ -10,6 +10,7 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from tracker import app as app1
 from mapout import app as app2
+from server import server as flask_app
 
 application = DispatcherMiddleware(flask_app, {
     '/app1': app1.server,
