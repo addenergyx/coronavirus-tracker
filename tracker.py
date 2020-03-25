@@ -192,7 +192,6 @@ nations = ts_confirmed['Country/Region'].unique()
 for nation in ts_confirmed['Country/Region'].unique():
     nation_options.append({'label':str(nation), 'value': nation})
 nation_options.append({'label':'Worldwide', 'value': 'Worldwide'})
-
  
 # navbar = dbc.NavbarSimple( 
 #     #id='navbar',
@@ -237,7 +236,19 @@ recovered_card = [
         [
             html.H2(get_total_recovered(), className="card-title", style={'textAlign':'center'}),
             #html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
-            html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'10px', 'padding-bottom':'8px'}),
+            html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'8px', #'padding-bottom':'8px'
+                                                                                                                              }),
+        ]
+    ),
+]
+
+mortality_card = [
+    dbc.CardHeader("Global Mortality Rate", style={'textAlign':'center'}),
+    dbc.CardBody(
+        [
+            html.H2('{0:.2f}%'.format((total_deaths / total_cases)*100), className="card-title card-style"),
+            #html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
+            html.Br(),
         ]
     ),
 ]
@@ -246,9 +257,26 @@ affected_card = [
     dbc.CardHeader("Total Infected countries/territories", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(get_num_countries_affected(), className="card-title", style={'textAlign':'center'}),
-            html.Br(),
+            html.H2(get_num_countries_affected(), className="card-title card-style"),
+            #html.Br(),
             #html.P("   ",className="card-text"),
+        ]
+    ),
+]
+
+from datetime import date
+def get_outbrek_days():
+    start = date(2019, 12, 31)
+    today = date.today()
+    delta = today - start
+    return delta.days
+
+days_card = [
+    dbc.CardHeader("Days Since Outbreak", style={'textAlign':'center'}),
+    dbc.CardBody(
+        [
+            html.H2(get_outbrek_days(), className="card-title card-style", ),
+            html.Br(),
         ]
     ),
 ]
@@ -256,14 +284,16 @@ affected_card = [
 cards = html.Div([
         dbc.Row(
             [
-                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px'}),width=12,lg=3),
-                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px'}),width=12,lg=3),
-                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px'}),width=12,lg=3),
-                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px'}),width=12,lg=3),
+                dbc.Col(dbc.Card(days_card, color="light", style={'margin':'10px'}), className="col", width=12, lg=2),
+                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
+                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
+                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
+                dbc.Col(dbc.Card(mortality_card, color="warning", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
+                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
             ],
-            no_gutters=True
+            no_gutters=True,
         ),
-    ])
+    ],className="container-fluid")
 
 colors = {
     'background': '#191A1A',

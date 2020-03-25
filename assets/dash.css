@@ -28,6 +28,10 @@
 }
 
 .dropdown {
-    padding-bottom: 20px
+    padding-bottom: 20px;
 }
 
+.card-style {
+    text-align: center; 
+    font-weight: bold;
+}
