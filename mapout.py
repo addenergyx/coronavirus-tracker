@@ -13,6 +13,7 @@ import pandas as pd
 import dash_daq as daq
 from dash.dependencies import Input, Output
 import numpy as np
+from dataset import get_jhu_dataset
 
 from tracker import unix_to_date, getMarks
 from navbar import Navbar
@@ -23,8 +24,10 @@ from newsapi import NewsApiClient
 from server import server
 import os
 
-ts_confirmed= pd.read_csv('time_series_covid19_confirmed_global.csv')
-ts_death= pd.read_csv('time_series_covid19_deaths_global.csv')
+ts_confirmed, ts_death = get_jhu_dataset()
+
+# ts_confirmed= pd.read_csv('time_series_covid19_confirmed_global.csv')
+# ts_death= pd.read_csv('time_series_covid19_deaths_global.csv')
 
 bbb = ts_death[ts_death.columns[4:]]
 aaa = ts_confirmed[ts_confirmed.columns[4:]]
@@ -362,6 +365,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
     temp_all = temp_confirmed_df[['City/Country', 'Confirmed','Latitude','Longitude']]
     temp_all.insert(2,'Deaths', temp_deaths_df[['Deaths']])
     temp_all.insert(2,'Active/Recovered',temp_recovered_df[['Active/Recovered']])
+    
+    #Diamond Princess has a -1 death
+    temp_recovered_df[temp_recovered_df['Active/Recovered'] < 0] = 0
     
     if selected_case == 'Deaths':
         fig = px.scatter_mapbox(temp_deaths_df, lat="Latitude", lon="Longitude", size='Deaths', size_max=100, hover_name="City/Country")

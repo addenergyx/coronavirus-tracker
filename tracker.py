@@ -9,14 +9,17 @@ import pandas as pd
 import numpy as np
 import os
 from navbar import Navbar
+from dataset import get_jhu_dataset
 #Data files
 # df = pd.read_csv('data.csv')
 # old_df = pd.read_csv('old_data.csv')
-ts_confirmed = pd.read_csv('time_series_covid19_confirmed_global.csv')
-ts_death = pd.read_csv('time_series_covid19_deaths_global.csv')
+
+ts_confirmed, ts_death = get_jhu_dataset()
 
 ## John hopkins stopped displaying recovery data
 #ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
+#ts_confirmed = pd.read_csv('time_series_covid19_confirmed_global.csv')
+#ts_death = pd.read_csv('time_series_covid19_deaths_global.csv')
 
 bbb = ts_death[ts_death.columns[4:]]
 aaa = ts_confirmed[ts_confirmed.columns[4:]]
@@ -136,11 +139,11 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 
 #external_stylesheets =['https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
 #external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css','https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
-external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP]
+external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP, 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css']
 
 app = dash.Dash(name='tracker', server=server, url_base_pathname='/tracker/', external_stylesheets=external_stylesheets, 
                 meta_tags=[
@@ -275,30 +278,47 @@ days_card = [
     dbc.CardHeader("Days Since Outbreak", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(get_outbrek_days(), className="card-title card-style", ),
+            html.H2(get_outbrek_days(), className="card-title card-style"),
             html.Br(),
-        ]
+        ], #style={'background-color':'green'}
     ),
 ]
 
 cards = html.Div([
         dbc.Row(
             [
-                dbc.Col(dbc.Card(days_card, color="light", style={'margin':'10px'}), className="col", width=12, lg=2),
-                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
-                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
-                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
-                dbc.Col(dbc.Card(mortality_card, color="warning", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
-                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px'}), className="col", width=12, lg=2),
+                dbc.Col(dbc.Card(days_card, color="light", style={'margin':'10px'}), width=12, lg=2),
+                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px'}), width=12, lg=2),
+                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px'}), width=12, lg=2),
+                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px'}), width=12, lg=2),
+                dbc.Col(dbc.Card(mortality_card, color="warning", inverse=True, style={'margin':'10px'}), width=12, lg=2),
+                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px'}), width=12, lg=2),
             ],
             no_gutters=True,
         ),
-    ],className="container-fluid")
+    ])
 
 colors = {
     'background': '#191A1A',
     'text': '#FFFFFF'
 }
+
+modal = html.Div(
+    [
+        dbc.Button("Recovery Data", id="open", className="ml-auto btn-danger fa fa-send", style={'float':'right'}),
+        dbc.Modal(
+            [
+                dbc.ModalHeader("Recovery Data"),
+                dbc.ModalBody("John Hopkins University which is the source for this data has decided to drop support for recovery data." +
+                              " Active/Recovery will be Confirmed - Deaths till an alternative source is found. Sorry for the inconvenience"),
+                dbc.ModalFooter(
+                    dbc.Button("Close", id="close", className="ml-auto")
+                ),
+            ],
+            id="modal",
+        ), 
+    ], style={'padding-right':'20px'},
+)
 
 body = html.Div([
     html.Div(children=[ html.H1('Coronavirus (COVID-19) Global Tracker',
@@ -366,6 +386,8 @@ body = html.Div([
             step=1,
             )
     ]),
+    
+    html.Div(modal),
     
     html.Div([
         dcc.Graph(
@@ -577,19 +599,22 @@ def update_time_series(unix_date):
     trace0 = go.Scatter(x=listy[1:], y=filtered_ts_confirmed,
                         mode='lines',
                         name='Confirrmed',
-                        line = {'color':'#0275d8'}
+                        line = {'color':'#0275d8'},
+                        #fill='tozeroy'
                         )
     
     trace1 = go.Scatter(x=listy[1:], y=filtered_ts_death,
                     mode='lines',
                     name='Deaths',
-                    line = {'color':'#d9534f'}
+                    line = {'color':'#d9534f'},
+                    #fill='tozeroy'
                     )
 
     trace2 = go.Scatter(x=listy[1:], y=filtered_ts_recovered,
                     mode='lines',
                     name='Active or Recovered',
-                    line = {'color':'#5cb85c'}
+                    line = {'color':'#5cb85c'},
+                    #fill='tozeroy'
                     )
     
     data = [trace0, trace1, trace2]
@@ -603,7 +628,10 @@ def update_time_series(unix_date):
                             },
                        xaxis={'gridcolor':'rgb(46,47,47)','autorange': True,},
                        yaxis={'gridcolor':'rgb(46,47,47)','autorange': True,'title':'Number of cases'},
-                       hovermode='closest'
+                       hovermode='closest',
+                       transition={
+                            'duration': 500,
+                            'easing': 'cubic-in-out',}
                        )
     
     fig = go.Figure(data=data, layout=layout)
@@ -625,13 +653,24 @@ def update_time_series(unix_date):
 )
 
     return fig
-                                      
+ 
+@app.callback(
+    Output("modal", "is_open"),
+    [Input("open", "n_clicks"), Input("close", "n_clicks")],
+    [State("modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+                                     
 @app.callback(Output('corona-map', 'figure'), [Input('nation','value'), Input('case','value'), 
                                                Input('exclude-china','value'), Input('time-frame','value')])
 def update_map(selected_nation, selected_case, click, unix_date):
     
-    #unix_date=1580256000
+    #unix_date=1585008000
     #selected_nation=['Worldwide']
+    
     date = unix_to_date(unix_date)
     
     zoom = 3    
@@ -667,6 +706,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
     temp_all = temp_confirmed_df[['City/Country', 'Confirmed','Latitude','Longitude']]
     temp_all.insert(2,'Deaths', temp_deaths_df[['Deaths']])
     temp_all.insert(2,'Active/Recovered',temp_recovered_df[['Active/Recovered']])
+    
+    #Diamond Princess has a -1 death
+    temp_recovered_df[temp_recovered_df['Active/Recovered'] < 0] = 0
     
     if selected_case == 'Deaths':
         fig = px.scatter_mapbox(temp_deaths_df, lat="Latitude", lon="Longitude", size='Deaths', size_max=100, hover_name="City/Country")
@@ -769,9 +811,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
     
     return fig
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True, use_reloader=False)
-#     #app.run_server()
+if __name__ == '__main__':
+    app.run_server(debug=True, use_reloader=False)
+    #app.run_server()
 
 
 
