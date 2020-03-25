@@ -183,7 +183,7 @@ app.index_string = '''
 </html>
 '''
 
-app.title = 'Coranavirus Tracker'
+app.title = 'Coronavirus Tracker'
 
 app.config.suppress_callback_exceptions = True
 

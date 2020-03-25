@@ -160,7 +160,7 @@ app.index_string = '''
 </html>
 '''
 
-app.title = 'Coranavirus Time-laspe Map'
+app.title = 'Coronavirus Time-laspe Map'
 
 app.config.suppress_callback_exceptions = True
 
