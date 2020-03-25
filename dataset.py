@@ -36,8 +36,11 @@ def get_jhu_dataset():
     iso_datetime = getList(iso_dict)
     
     ## Format date to match JHU Dataset
-    date_column_names = [datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S%z").strftime("%#m/%#d/%y") for x in iso_datetime]
-    
+    if os.name == 'nt':
+        date_column_names = [datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S%z").strftime("%#m/%#d/%y") for x in iso_datetime]
+    else:
+        date_column_names = [datetime.datetime.strptime(x, "%Y-%m-%dT%H:%M:%S%z").strftime("%-m/%-d/%y") for x in iso_datetime]
+        
     names = ['Province/State', 'Country/Region', 'Lat', 'Long']
     
     names.extend(date_column_names)
