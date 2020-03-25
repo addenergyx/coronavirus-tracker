@@ -12,9 +12,19 @@ from navbar import Navbar
 #Data files
 # df = pd.read_csv('data.csv')
 # old_df = pd.read_csv('old_data.csv')
-ts_confirmed= pd.read_csv('time_series_19-covid-Confirmed.csv')
-ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
-ts_death= pd.read_csv('time_series_19-covid-Deaths.csv')
+ts_confirmed = pd.read_csv('time_series_covid19_confirmed_global.csv')
+ts_death = pd.read_csv('time_series_covid19_deaths_global.csv')
+
+## John hopkins stopped displaying recovery data
+#ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
+
+bbb = ts_death[ts_death.columns[4:]]
+aaa = ts_confirmed[ts_confirmed.columns[4:]]
+
+ccc = aaa.subtract(bbb)
+
+ts_recovered = ts_confirmed[['Province/State','Country/Region', 'Lat','Long']]
+ts_recovered = ts_recovered.join(ccc)      
 
 def clean_data(frame):
     for index, row in frame.iterrows():
@@ -25,11 +35,13 @@ def clean_data(frame):
     frame["City/Country"] = city_country
     #df['Province/State'].fillna(df['Country/Region'], inplace=True)
     frame['City/Country'].fillna(frame['Country/Region'], inplace=True)
+    #frame.ffill()
 
 clean_data(ts_confirmed)
 clean_data(ts_death)
 clean_data(ts_recovered)
 #clean_data(df)
+#ts_confirmed.fillna(method='bfill', inplace=True, axis=1)
 
 import time
 import datetime
@@ -98,7 +110,20 @@ def get_num_countries_affected():
     a = re.search(pattern, stripped)
     
     return a.group(1)
+
+def get_total_recovered():
+    resp = req.get("https://www.worldometers.info/coronavirus/")
+
+    pattern = 'Recovered:\s*(\d+.\d+)'
     
+    content = resp.text
+    
+    stripped = re.sub('<[^<]+?>', '', content)
+    
+    a = re.search(pattern, stripped)
+    a = re.sub('\D', '', str(a.group(1)))
+    
+    return a
 
 import dash_table
 
@@ -132,6 +157,15 @@ app.index_string = '''
 <html>
     <head>
         {%metas%}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146361977-3"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+        
+          gtag('config', 'UA-146361977-3');
+        </script>
+        <script data-ad-client="ca-pub-7702690633531029" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         <script data-name="BMC-Widget" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="addenergyx" data-description="Support me on Buy me a coffee!" 
         data-message="Thank you for visiting. Please support this project" data-color="#FF813F" data-position="right" data-x_margin="18" data-y_margin="18"></script>
         {%css%}
@@ -201,8 +235,9 @@ recovered_card = [
     dbc.CardHeader("Total Recovered", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(total_recovered, className="card-title", style={'textAlign':'center'}),
-            html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
+            html.H2(get_total_recovered(), className="card-title", style={'textAlign':'center'}),
+            #html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
+            html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'10px', 'padding-bottom':'8px'}),
         ]
     ),
 ]
@@ -211,7 +246,7 @@ affected_card = [
     dbc.CardHeader("Total Infected countries/territories", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(get_num_countries_affected()+"/195", className="card-title", style={'textAlign':'center'}),
+            html.H2(get_num_countries_affected(), className="card-title", style={'textAlign':'center'}),
             html.Br(),
             #html.P("   ",className="card-text"),
         ]
@@ -331,7 +366,7 @@ body = html.Div([
                         {'label':'All','value':'All'},
                         {'label':'Confirmed','value':'Confirmed'},
                         {'label':'Deaths','value':'Deaths'},
-                        {'label':'Recovered','value':'Recovered'},
+                        {'label':'Active/Recovered','value':'Active/Recovered'},
                     ],
                     value='All',
                     className='dropdown',
@@ -507,6 +542,8 @@ def update_time_series(unix_date):
     filtered_ts_death = ts_death[listy[1:]].sum()
     filtered_ts_recovered = ts_recovered[listy[1:]].sum()
     
+    
+    
     trace0 = go.Scatter(x=listy[1:], y=filtered_ts_confirmed,
                         mode='lines',
                         name='Confirrmed',
@@ -521,7 +558,7 @@ def update_time_series(unix_date):
 
     trace2 = go.Scatter(x=listy[1:], y=filtered_ts_recovered,
                     mode='lines',
-                    name='Recovered',
+                    name='Active or Recovered',
                     line = {'color':'#5cb85c'}
                     )
     
@@ -565,7 +602,6 @@ def update_map(selected_nation, selected_case, click, unix_date):
     
     #unix_date=1580256000
     #selected_nation=['Worldwide']
-    
     date = unix_to_date(unix_date)
     
     zoom = 3    
@@ -594,19 +630,19 @@ def update_map(selected_nation, selected_case, click, unix_date):
         
     ## Rename columns to prettify hover data
     temp_deaths_df = filtered_ts_death.rename(columns = {date:'Deaths', 'Lat':'Latitude', 'Long':'Longitude'})
-    temp_recovered_df = filtered_ts_recovered.rename(columns = {date:'Recovered', 'Lat':'Latitude', 'Long':'Longitude'})
     temp_confirmed_df = filtered_ts_confirmed.rename(columns = {date:'Confirmed', 'Lat':'Latitude', 'Long':'Longitude'})
-    
+    temp_recovered_df = filtered_ts_recovered.rename(columns = {date:'Active/Recovered', 'Lat':'Latitude', 'Long':'Longitude'})
+
     #assumes order of countries from datasets are the same
     temp_all = temp_confirmed_df[['City/Country', 'Confirmed','Latitude','Longitude']]
     temp_all.insert(2,'Deaths', temp_deaths_df[['Deaths']])
-    temp_all.insert(2,'Recovered',temp_recovered_df[['Recovered']])
+    temp_all.insert(2,'Active/Recovered',temp_recovered_df[['Active/Recovered']])
     
     if selected_case == 'Deaths':
         fig = px.scatter_mapbox(temp_deaths_df, lat="Latitude", lon="Longitude", size='Deaths', size_max=100, hover_name="City/Country")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Red'))
-    elif selected_case == 'Recovered':
-        fig = px.scatter_mapbox(temp_recovered_df, lat="Latitude", lon="Longitude", size="Recovered",
+    elif selected_case == 'Active/Recovered':
+        fig = px.scatter_mapbox(temp_recovered_df, lat="Latitude", lon="Longitude", size="Active/Recovered",
                       size_max=100, hover_name="City/Country")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Green'))
     elif selected_case == 'Confirmed':
@@ -617,7 +653,7 @@ def update_map(selected_nation, selected_case, click, unix_date):
         fig = px.scatter_mapbox(temp_all, lat="Latitude", lon="Longitude", color="Deaths", size="Confirmed",
                               #color_continuous_scale=px.colors.diverging.Picnic,
                               size_max=50, hover_name="City/Country",
-                              hover_data=["Confirmed", "Recovered", "Deaths"] 
+                              hover_data=["Confirmed", "Active/Recovered", "Deaths"] 
                               )
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
     
