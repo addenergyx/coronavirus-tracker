@@ -24,8 +24,7 @@ def update_news():
     # /v2/top-headlines
     top_headlines = newsapi.get_top_headlines(q='Coronavirus',
                                               #sources='google-news',
-                                              language='en',
-                                              country='gb')
+                                              language='en')
     
     articles = top_headlines['articles']
     
