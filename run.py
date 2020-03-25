@@ -5,14 +5,13 @@ Created on Mon Mar 16 22:26:56 2020
 @author: david
 """
 
-## USE IN DEV ONLY
-
 # from server import server
 # from tracker import app as tracker
 # from mapout import app as mapout
 # if __name__ == '__main__':
 #     server.run()
 
+## USE IN DEV ONLY
 
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.serving import run_simple
