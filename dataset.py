@@ -10,6 +10,7 @@ Created on Wed Mar 25 13:26:07 2020
 import datetime
 import pandas as pd
 import COVID19Py
+import os
 
 ## Date column names
 def getList(dict): 
