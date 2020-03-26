@@ -361,13 +361,15 @@ def update_map(selected_nation, selected_case, click, unix_date):
     temp_recovered_df = filtered_ts_recovered.rename(columns = {date:'Active/Recovered', 'Lat':'Latitude', 'Long':'Longitude'})
     temp_confirmed_df = filtered_ts_confirmed.rename(columns = {date:'Confirmed', 'Lat':'Latitude', 'Long':'Longitude'})
     
+    #Some data from JHU appears as -1 unsure why
+    temp_recovered_df[temp_recovered_df['Active/Recovered'] < 0] = 0
+    temp_confirmed_df[temp_confirmed_df['Confirmed'] < 0] = 0
+    temp_deaths_df[temp_deaths_df['Deaths'] < 0] = 0
+    
     #assumes order of countries from datasets are the same
     temp_all = temp_confirmed_df[['City/Country', 'Confirmed','Latitude','Longitude']]
     temp_all.insert(2,'Deaths', temp_deaths_df[['Deaths']])
     temp_all.insert(2,'Active/Recovered',temp_recovered_df[['Active/Recovered']])
-    
-    #Diamond Princess has a -1 death
-    temp_recovered_df[temp_recovered_df['Active/Recovered'] < 0] = 0
     
     if selected_case == 'Deaths':
         fig = px.scatter_mapbox(temp_deaths_df, lat="Latitude", lon="Longitude", size='Deaths', size_max=100, hover_name="City/Country")
@@ -410,9 +412,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
 
 app.layout = Homepage()
 
-# if __name__ == "__main__":
-#     #app.run_server()
-#     app.run_server(debug=True, use_reloader=False)
+if __name__ == "__main__":
+    #app.run_server()
+    app.run_server(debug=True, use_reloader=False)
 
 
     
