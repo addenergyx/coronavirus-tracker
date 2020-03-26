@@ -305,7 +305,7 @@ colors = {
 
 modal = html.Div(
     [
-        dbc.Button("Recovery Data", id="open", className="ml-auto btn-danger fa fa-send", style={'float':'right'}),
+        dbc.Button(" Recovery Data", id="open", className="ml-auto btn-danger fa fa-send", style={'float':'right'}),
         dbc.Modal(
             [
                 dbc.ModalHeader("Recovery Data"),
