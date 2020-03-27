@@ -18,7 +18,7 @@ import re
 # generate random integer values
 from random import randint
 
-interval_state = 1000
+interval_state = 100000
 url = 'https://www.worldometers.info/coronavirus/'
 ts_confirmed, ts_death = get_jhu_dataset()
 ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
@@ -136,7 +136,7 @@ confirmed_card = [
     dbc.CardBody(
         [
             html.H2(id="con", className="card-title", style={'textAlign':'center'}),
-            html.P("+{} in the last 24hrs".format(get_total('Coronavirus Cases:\s*(\d+.\d+)')-old_total_cases),className="card-text", style={'textAlign':'center'}),
+            html.P("+{} in the last 24hrs".format(total_cases-old_total_cases),className="card-text", style={'textAlign':'center'}),
         ]
     ),
 ]
@@ -146,7 +146,7 @@ death_card = [
     dbc.CardBody(
         [
             html.H2(id="dea", className="card-title", style={'textAlign':'center'}),
-            html.P("+{} in the last 24hrs".format(get_total('Deaths:\s*(\d+.\d+)')-old_total_deaths),className="card-text", style={'textAlign':'center'}),
+            html.P("+{} in the last 24hrs".format(total_deaths-old_total_deaths),className="card-text", style={'textAlign':'center'}),
         ]
     ),
 ]
@@ -498,24 +498,23 @@ def update_progress(n):
     # only add text after 5% progress to ensure text isn't squashed too much
     return progress, f"{progress} %"
 
-@app.callback(
-    [Output('reco','children'), Output('con','children'), Output('dea','children')],
-    [Input('recovery-interval-component','n_intervals')])
+## Using multi output slowed down dash considerably
+@app.callback(Output('reco','children'),[Input('recovery-interval-component','n_intervals')])
 def update_cards(n):
     
     ## Randomise scraping site times
     global interval_state
     interval_state = randint(60000, 180000)
     
-    return "*"+"{:,d}".format(get_total('Recovered:\s*(\d+.\d+)')), "{:,d}".format(get_total('Coronavirus Cases:\s*(\d+.\d+)')), "{:,d}".format(get_total('Deaths:\s*(\d+.\d+)'))
+    return "*"+"{:,d}".format(get_total('Recovered:\s*(\d+.\d+)'))
 
-# @app.callback(Output('con','children'), [Input('recovery-interval-component','n_intervals')])
-# def update_confirmed(n):
-#     return "{:,d}".format(int(get_total('Coronavirus Cases:\s*(\d+.\d+)')))
+@app.callback(Output('con','children'), [Input('recovery-interval-component','n_intervals')])
+def update_confirmed(n):
+    return "{:,d}".format(int(get_total('Coronavirus Cases:\s*(\d+.\d+)')))
 
-# @app.callback(Output('dea','children'), [Input('recovery-interval-component','n_intervals')])
-# def update_deaths(n):    
-#     return "{:,d}".format(int(get_total('Deaths:\s*(\d+.\d+)')))
+@app.callback(Output('dea','children'), [Input('recovery-interval-component','n_intervals')])
+def update_deaths(n):    
+    return "{:,d}".format(int(get_total('Deaths:\s*(\d+.\d+)')))
 
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
 def update_time_series(unix_date):    
