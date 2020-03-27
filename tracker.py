@@ -18,7 +18,7 @@ import re
 # generate random integer values
 from random import randint
 
-interval_state = 60000
+interval_state = 1000
 url = 'https://www.worldometers.info/coronavirus/'
 ts_confirmed, ts_death = get_jhu_dataset()
 ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
@@ -127,7 +127,7 @@ app.index_string = '''
 </html>
 '''
 
-app.title = 'Coronavirus Tracker'
+app.title = 'Tracker'
 
 app.config.suppress_callback_exceptions = True
 
