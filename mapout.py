@@ -13,10 +13,8 @@ import pandas as pd
 import dash_daq as daq
 from dash.dependencies import Input, Output
 import numpy as np
-from dataset import get_jhu_dataset
-
-from tracker import unix_to_date, getMarks
-from navbar import Navbar
+from navbar import NationsDropdown, CasesDropdown, Navbar
+from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, unix_to_date
 
 import plotly.express as px
 from newsapi import NewsApiClient
@@ -24,34 +22,17 @@ from newsapi import NewsApiClient
 from server import server
 import os
 
+import time
+import datetime
+
+mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
+
 ts_confirmed, ts_death = get_jhu_dataset()
 
 # ts_confirmed= pd.read_csv('time_series_covid19_confirmed_global.csv')
-# ts_death= pd.read_csv('time_series_covid19_deaths_global.csv')
+# ts_death= pd.read_csv('time_series_covid19_deaths_global.csv') 
 
-bbb = ts_death[ts_death.columns[4:]]
-aaa = ts_confirmed[ts_confirmed.columns[4:]]
-
-ccc = aaa.subtract(bbb)
-
-ts_recovered = ts_confirmed[['Province/State','Country/Region', 'Lat','Long']]
-ts_recovered = ts_recovered.join(ccc)  
-
-nation_options = []
-nations = ts_confirmed['Country/Region'].unique()
-for nation in ts_confirmed['Country/Region'].unique():
-    nation_options.append({'label':str(nation), 'value': nation})
-nation_options.append({'label':'Worldwide', 'value': 'Worldwide'})
-
-def clean_data(frame):
-    for index, row in frame.iterrows():
-      if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
-          frame['Province/State'][index] = None
-    
-    city_country = np.array(frame['Province/State'] + ", " + frame['Country/Region'] )
-    frame["City/Country"] = city_country
-    #df['Province/State'].fillna(df['Country/Region'], inplace=True)
-    frame['City/Country'].fillna(frame['Country/Region'], inplace=True)
+ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
 
 clean_data(ts_confirmed)
 clean_data(ts_death)
@@ -113,12 +94,8 @@ def generate_html_table(max_rows=10):
         ],
         style={"height": "100%"},)
 
-import time
-import datetime
 time_scale = ts_confirmed.columns[4:-1]
 time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
-
-mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
 
 external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP]
 
@@ -185,31 +162,9 @@ body = html.Div(
                     ], style={'color': '#0275d8'}),
                     
                     html.Div([
-                        html.Div([
-                            dcc.Dropdown( 
-                                id='nation',
-                                options=nation_options,
-                                value=['Worldwide'],
-                                multi=True
-                                )
-                        ], className='dropdown'),
+                        html.Div([NationsDropdown(ts_confirmed)]),
                         
-                        html.Div([
-                            dcc.Dropdown( 
-                                id='case',
-                                #options=[{'label':i,'value':i} for i in df.columns[3:6]], #for data.csv
-                                options=[
-                                    {'label':'All','value':'All'},
-                                    {'label':'Confirmed','value':'Confirmed'},
-                                    {'label':'Deaths','value':'Deaths'},
-                                    {'label':'Active/Recovered','value':'Active/Recovered'},
-                                ],
-                                value='All',
-                                className='dropdown',
-                                searchable=False,
-                                #style=dropdown_style
-                            )
-                        ]),
+                        html.Div([CasesDropdown()]),
                         
                         html.Div([
                             dcc.Slider(
@@ -219,7 +174,7 @@ body = html.Div(
                                 value = time_scale_unix[-1],
                                 #updatemode='drag',
                                 #tooltip = { 'always_visible': True },
-                                marks=getMarks(time_scale[0],time_scale[-1], 10),
+                                marks=getMarks(time_scale, time_scale_unix, 10),
                                 step=1,
                             ),
                         ]),
@@ -259,51 +214,51 @@ body = html.Div(
             )
        ]),
        
-       # Footer
-    # html.Div(
-    #     className='row',
-    #     children=[
-    #       html.Div(
-    #         className='col',
-    #         children=[
-    #           html.P(
-    #             'Data source:',style={'color': colors['text']}
-    #           ),
-    #           html.A(
-    #               'Johns Hopkins CSSE',
-    #               href='https://github.com/CSSEGISandData/COVID-19'
-    #           )                    
-    #         ]
-    #       ),
-    #       html.Div(
-    #         className='col',
-    #         children=[
-    #           html.P(
-    #             'Code avaliable at:',style={'color': colors['text']}
-    #           ),
-    #           html.A(
-    #               'Github',
-    #               href='https://github.com/addenergyx/coronavirus-tracker'
-    #           )                    
-    #         ]
-    #       ),
-    #       html.Div(
-    #         className='col',
-    #         children=[
-    #           html.P(
-    #             'Made with:', style={'color': colors['text']}
-    #           ),
-    #           html.A(
-    #               'Dash / Plot.ly',
-    #               href='https://plot.ly/dash/'
-    #           )                    
-    #         ]
-    #       ),                                                         
-    #     ],        
-    #     style={
-    #         'padding': 40
-    #     }
-    # ) 
+    ## Footer
+    html.Div(
+        className='row',
+        children=[
+          html.Div(
+            className='col',
+            children=[
+              html.P(
+                'Data source:',style={'color': colors['text']}
+              ),
+              html.A(
+                  'Johns Hopkins CSSE',
+                  href='https://github.com/CSSEGISandData/COVID-19'
+              )                    
+            ]
+          ),
+          html.Div(
+            className='col',
+            children=[
+              html.P(
+                'Code avaliable at:',style={'color': colors['text']}
+              ),
+              html.A(
+                  'Github',
+                  href='https://github.com/addenergyx/coronavirus-tracker'
+              )                    
+            ]
+          ),
+          html.Div(
+            className='col',
+            children=[
+              html.P(
+                'Made with:', style={'color': colors['text']}
+              ),
+              html.A(
+                  'Dash / Plot.ly',
+                  href='https://plot.ly/dash/'
+              )                    
+            ]
+          ),                                                         
+        ],        
+        style={
+            'padding': 40
+        }
+    )## 
   ])
     
 def Homepage():
@@ -330,6 +285,8 @@ def update_map(selected_nation, selected_case, click, unix_date):
     # unix_date=1584071771
     # selected_nation=['Worldwide']
     
+    px.set_mapbox_access_token(mapbox_access_token)
+
     date = unix_to_date(unix_date)
     
     zoom = 3    
@@ -354,7 +311,6 @@ def update_map(selected_nation, selected_case, click, unix_date):
         filtered_ts_death = filtered_ts_death[filtered_ts_death['Country/Region'] != 'China']
         filtered_ts_recovered = filtered_ts_recovered[filtered_ts_recovered['Country/Region'] != 'China']
     
-    px.set_mapbox_access_token(mapbox_access_token)
         
     ## Rename columns to prettify hover data
     temp_deaths_df = filtered_ts_death.rename(columns = {date:'Deaths', 'Lat':'Latitude', 'Long':'Longitude'})
@@ -386,8 +342,7 @@ def update_map(selected_nation, selected_case, click, unix_date):
         fig = px.scatter_mapbox(temp_all, lat="Latitude", lon="Longitude", color="Deaths", size="Confirmed",
                               #color_continuous_scale=px.colors.diverging.Picnic,
                               size_max=50, hover_name="City/Country",
-                              hover_data=["Confirmed", "Active/Recovered", "Deaths"] 
-                              )
+                              hover_data=["Confirmed", "Active/Recovered", "Deaths"])
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
     
     fig.update(

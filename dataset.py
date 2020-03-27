@@ -11,6 +11,7 @@ import datetime
 import pandas as pd
 import COVID19Py
 import os
+import numpy as np
 
 ## Date column names
 def getList(dict): 
@@ -30,8 +31,6 @@ def get_jhu_dataset():
     ## Timeseries data
     timeline = data["locations"]
     
-    
-    
     iso_dict = timeline[0]['timelines']['confirmed']['timeline']
     
     iso_datetime = getList(iso_dict)
@@ -44,19 +43,7 @@ def get_jhu_dataset():
         
     names = ['Province/State', 'Country/Region', 'Lat', 'Long']
     
-    names.extend(date_column_names)
-    
-    #ace = pd.DataFrame(timeline)
-    
-    # row_list = []
-    # crow = []
-    # for a in timeline:
-       
-    #    row = [a['province'],a['country'],a['coordinates']['latitude'],a['coordinates']['longitude']]
-    #    row.extend(getValues(a['timelines']['confirmed']['timeline']))
-    #    row_list.append(row)
-    
-    # confirmed_df = pd.DataFrame(row_list, columns=names)               
+    names.extend(date_column_names)            
     
     confirmed_row_list = []
     deaths_row_list = []
@@ -65,7 +52,6 @@ def get_jhu_dataset():
        
         crow = [ None if not a['province'] else a['province'], a['country'],float(a['coordinates']['latitude']),float(a['coordinates']['longitude'])]
         drow = [ None if not a['province'] else a['province'],a['country'],float(a['coordinates']['latitude']), float(a['coordinates']['longitude'])]
-        fff = a['coordinates']['latitude']
         crow.extend(getValues(a['timelines']['confirmed']['timeline']))
         drow.extend(getValues(a['timelines']['deaths']['timeline']))
        
@@ -77,4 +63,56 @@ def get_jhu_dataset():
 
     return confirmed_df, deaths_df
 
-c,j = get_jhu_dataset()
+def clean_data(frame):
+    for index, row in frame.iterrows():
+      if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
+          frame['Province/State'][index] = None
+    
+    city_country = np.array(frame['Province/State'] + ", " + frame['Country/Region'] )
+    frame["City/Country"] = city_country
+    #df['Province/State'].fillna(df['Country/Region'], inplace=True)
+    frame['City/Country'].fillna(frame['Country/Region'], inplace=True)
+    #frame.ffill()
+
+def get_recovery_frame(confirmed, death):
+
+    aaa = confirmed[confirmed.columns[4:]]
+    bbb = death[death.columns[4:]]
+    
+    ccc = aaa.subtract(bbb)
+
+    ts_recovered = confirmed[['Province/State','Country/Region', 'Lat','Long']]
+    ts_recovered = ts_recovered.join(ccc)
+    
+    return ts_recovered
+
+def getMarks(time_scale, time_scale_unix, Nth=4):
+    ''' Returns the marks for labeling. 
+        Every Nth value will be used.
+    '''
+    result = {}
+    for i, date in enumerate(time_scale):
+        if(i%Nth == 1):
+            # Append value to dict
+            result[time_scale_unix[i]] = time_scale[i]
+    return result
+
+def get_total(frame):
+    return frame.iloc[:,-2].sum(axis = 0, skipna = True)
+
+def get_previous_total(frame):
+    return frame.iloc[:,-3].sum(axis = 0, skipna = True)
+
+def unix_to_date(unix_date):
+    ## In unix use - to remove leading 0 e.g %-m/%-d/%y
+    if os.name == 'nt':
+        date=datetime.datetime.fromtimestamp(unix_date).strftime("%#m/%#d/%y")
+    else:
+        date=datetime.datetime.fromtimestamp(unix_date).strftime("%-m/%-d/%y")     
+    return date
+
+
+
+
+
+
