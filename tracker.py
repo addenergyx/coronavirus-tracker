@@ -8,97 +8,41 @@ from server import server
 import pandas as pd
 import numpy as np
 import os
-from navbar import Navbar
-from dataset import get_jhu_dataset
-#Data files
-# df = pd.read_csv('data.csv')
-# old_df = pd.read_csv('old_data.csv')
+from navbar import NationsDropdown, CasesDropdown, Navbar
+from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, get_total, get_previous_total, unix_to_date
+
+import time
+import datetime
+
+import requests as req
+import re
+
+# generate random integer values
+from random import randint
+
+interval_state = 60000
 
 ts_confirmed, ts_death = get_jhu_dataset()
-
-## John hopkins stopped displaying recovery data
-#ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
-#ts_confirmed = pd.read_csv('time_series_covid19_confirmed_global.csv')
-#ts_death = pd.read_csv('time_series_covid19_deaths_global.csv')
-
-bbb = ts_death[ts_death.columns[4:]]
-aaa = ts_confirmed[ts_confirmed.columns[4:]]
-
-ccc = aaa.subtract(bbb)
-
-ts_recovered = ts_confirmed[['Province/State','Country/Region', 'Lat','Long']]
-ts_recovered = ts_recovered.join(ccc)      
-
-def clean_data(frame):
-    for index, row in frame.iterrows():
-      if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
-          frame['Province/State'][index] = None
-    
-    city_country = np.array(frame['Province/State'] + ", " + frame['Country/Region'] )
-    frame["City/Country"] = city_country
-    #df['Province/State'].fillna(df['Country/Region'], inplace=True)
-    frame['City/Country'].fillna(frame['Country/Region'], inplace=True)
-    #frame.ffill()
+ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
 
 clean_data(ts_confirmed)
 clean_data(ts_death)
 clean_data(ts_recovered)
-#clean_data(df)
-#ts_confirmed.fillna(method='bfill', inplace=True, axis=1)
 
-import time
-import datetime
 time_scale = ts_confirmed.columns[4:-1]
-result = {}
 '''
 Dash does not support datetime objects by default.
 You can solve this issue by converting your datetime object into an unix timestamp.
 '''
 time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
 
-def getMarks(start, end, Nth=4):
-    ''' Returns the marks for labeling. 
-        Every Nth value will be used.
-    '''
-    result = {}
-    for i, date in enumerate(time_scale):
-        if(i%Nth == 1):
-            # Append value to dict
-            result[time_scale_unix[i]] = time_scale[i]
-    return result
+total_deaths = get_total(ts_death)
+#total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
+total_cases = get_total(ts_confirmed)
 
-# ## Cleanup data
-# for index, row in df.iterrows():
-#       if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
-#           df['Province/State'][index] = None
-
-# city_country = np.array(df['Province/State'] + ", " + df['Country/Region'] )
-# df["City/Country"] = city_country
-# #df['Province/State'].fillna(df['Country/Region'], inplace=True)
-# df['City/Country'].fillna(df['Country/Region'], inplace=True)
-
-total_deaths = ts_death.iloc[:,-2].sum(axis = 0, skipna = True)
-total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
-total_cases = ts_confirmed.iloc[:,-2].sum(axis = 0, skipna = True)
-
-old_total_deaths = ts_death.iloc[:,-3].sum(axis = 0, skipna = True)
-old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
-old_total_cases = ts_confirmed.iloc[:,-3].sum(axis = 0, skipna = True)
-
-# total_recovered = df['Recovered'].sum(axis = 0, skipna = True)
-# total_cases = df['Confirmed'].sum(axis = 0, skipna = True)
-
-# old_total_deaths = old_df['Deaths'].sum(axis = 0, skipna = True)
-# old_total_recovered = old_df['Recovered'].sum(axis = 0, skipna = True)
-# old_total_cases = old_df['Confirmed'].sum(axis = 0, skipna = True)
-
-## Change in stats
-# death_change = total_deaths - old_total_deaths
-# recovery_change = total_recovered - old_total_recovered
-# cases_change = total_cases - old_total_cases
-
-import requests as req
-import re
+old_total_deaths = get_previous_total(ts_death)
+#old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
+old_total_cases = get_previous_total(ts_confirmed)
 
 def get_num_countries_affected():
     
@@ -190,29 +134,6 @@ app.title = 'Coronavirus Tracker'
 
 app.config.suppress_callback_exceptions = True
 
-nation_options = []
-nations = ts_confirmed['Country/Region'].unique()
-for nation in ts_confirmed['Country/Region'].unique():
-    nation_options.append({'label':str(nation), 'value': nation})
-nation_options.append({'label':'Worldwide', 'value': 'Worldwide'})
- 
-# navbar = dbc.NavbarSimple( 
-#     #id='navbar',
-#     children=[
-#         dbc.NavItem(dbc.NavLink("Home", href="../", external_link=True,)),
-#         dbc.NavItem(dbc.NavLink("Latest News", href="../news", external_link=True)),
-#         dbc.NavItem(dbc.NavLink("Audiobooks", href="../books", external_link=True)),
-#     ],
-#     brand="Coronavirus (COVID-19) Global Tracker",
-#     brand_href="../",
-#     expand=True,
-#     dark=True,
-#     color='default',
-#     sticky="top",
-#     fluid=True,
-#     #className=" bg-transparent",
-# )
-
 confirmed_card = [
     dbc.CardHeader("Total Confirmed Cases", style={'textAlign':'center'}),
     dbc.CardBody(
@@ -237,7 +158,7 @@ recovered_card = [
     dbc.CardHeader("Total Recovered", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(get_total_recovered(), className="card-title", style={'textAlign':'center'}),
+            html.H2(id="reco", className="card-title", style={'textAlign':'center'}),
             #html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
             html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'8px', #'padding-bottom':'8px'
                                                                                                                               }),
@@ -267,10 +188,9 @@ affected_card = [
     ),
 ]
 
-from datetime import date
 def get_outbrek_days():
-    start = date(2019, 12, 31)
-    today = date.today()
+    start = datetime.date(2019, 12, 31)
+    today = datetime.date.today()
     delta = today - start
     return delta.days
 
@@ -280,7 +200,7 @@ days_card = [
         [
             html.H2(get_outbrek_days(), className="card-title card-style"),
             html.Br(),
-        ], #style={'background-color':'green'}
+        ],
     ),
 ]
 
@@ -339,39 +259,13 @@ body = html.Div([
                                       'justify-content': 'center'
                                       }),
         
-    html.Div([cards], className="mb-4"),
-        
-    # html.Div([
-    #     html.H2('Total Confirmed: {}'.format(total_cases), style={'color':'blue', 'display':'inline-block', 'width': '33%', 'textAlign':'center'}),
-    #     html.H2('Total Deaths: {}'.format(total_deaths), style={'color':'red', 'display':'inline-block', 'width': '33%', 'textAlign':'center'}),
-    #     html.H2('Total Recovered: {}'.format(total_recovered), style={'color':'green', 'display':'inline-block', 'width': '33%', 'textAlign':'center'}),
-    #     # Add past 24hr changes
-    # ]),
-    
-    # html.Div([ 
-    #     html.Div([   
-    #         dbc.Alert('Total Confirmed: {}'.format(total_cases), color="primary"),
-    #     ],className='four columns'),
-    #     html.Div([ 
-    #         dbc.Alert('Total Deaths: {}'.format(total_deaths), color="danger"),
-    #     ],className='four columns'),
-    #     html.Div([ 
-    #         dbc.Alert('Total Recovered: {}'.format(total_recovered), color="success"),
-    #     ],className='four columns'),    
-    # ],className='row'),
-    
-    # html.Div(
-    #     [
-    #         
-    #         dbc.Alert("This is a secondary alert", color="secondary"),
-    #         
-    #         dbc.Alert("This is a warning alert... be careful...", color="warning"),
-    #         
-    #         dbc.Alert("This is an info alert. Good to know!", color="info"),
-    #         dbc.Alert("This is a light alert", color="light"),
-    #         dbc.Alert("This is a dark alert", color="dark"),
-    #     ]
-    # ),
+    html.Div([
+        cards,
+        dcc.Interval(id='recovery-interval-component',
+                    interval=interval_state,
+                    n_intervals=0,
+                    )
+        ], className="mb-4"),
     
     ##TIME SCALE
     html.Div([
@@ -382,10 +276,16 @@ body = html.Div([
             value = time_scale_unix[-1],
             #updatemode='drag',
             #tooltip = { 'always_visible': True },
-            marks=getMarks(time_scale[0],time_scale[-1]),
+            marks=getMarks(time_scale, time_scale_unix),
             step=1,
+            ),
+        dcc.Interval(id='data-interval-component',
+            interval=2000,
+            n_intervals=0,
             )
     ]),
+    
+    html.Div(id='data'),
     
     html.Div(modal),
     
@@ -396,35 +296,13 @@ body = html.Div([
     ],style={'padding-bottom': 40,
              'padding-right': 40,
              'padding-left': 40,}),
-    
-    html.Div(id='slider-output-container', style={'color':'white'}),
-    
+        
     ## DROPDOWN ROW
     html.Div([
         dbc.Row(
             [
-                dbc.Col(dcc.Dropdown( 
-                id='nation',
-                options=nation_options,
-                value=['Worldwide'],
-                multi=True,
-                #style=dropdown_style,
-                className='dropdown',
-                )),
-                dbc.Col(dcc.Dropdown( 
-                    id='case',
-                    #options=[{'label':i,'value':i} for i in df.columns[3:6]], #for data.csv
-                    options=[
-                        {'label':'All','value':'All'},
-                        {'label':'Confirmed','value':'Confirmed'},
-                        {'label':'Deaths','value':'Deaths'},
-                        {'label':'Active/Recovered','value':'Active/Recovered'},
-                    ],
-                    value='All',
-                    className='dropdown',
-                    searchable=False,
-                    #style=dropdown_style
-                )),
+                html.Div([NationsDropdown(ts_confirmed)]),
+                html.Div([CasesDropdown()]),
             ]
         )
     ]),
@@ -488,11 +366,6 @@ body = html.Div([
     #         ], style={'padding-top': '50px'}),
     # ]),
     
-    # html.Div([
-    #     html.H3("Coronavirus News", style={'color': colors['text']}),
-    #     generate_html_table()
-    # ], className='col-3'),
-    
     # Footer
     html.Div(
         className='row',
@@ -537,8 +410,7 @@ body = html.Div([
         style={
             'padding': 40
         }
-    ) 
-    
+    )  
   ])
 
 def Homepage():
@@ -552,17 +424,74 @@ app.layout = Homepage()
   
 import plotly.graph_objs as go
 
-# @app.callback(Output('slider-output-container', 'children'), [Input('time-frame','value')])
-# def test(unix_date):
-#     return 'You have selected "{}"'.format(datetime.datetime.fromtimestamp(unix_date).strftime("%m/%d/%y"))
+# @app.callback(Output('data','children'), [Input('data-interval-component','n_intervals')])
+# def update_dataset(n):
+#     #Data files
+#     # df = pd.read_csv('data.csv')
+#     # old_df = pd.read_csv('old_data.csv')
+    
+#     ## John hopkins stopped displaying recovery data
+#     #ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
+#     #ts_confirmed = pd.read_csv('time_series_covid19_confirmed_global.csv')
+#     #ts_death = pd.read_csv('time_series_covid19_deaths_global.csv')
+    
+#     ts_confirmed, ts_death = get_jhu_dataset()
+    
+#     ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
+    
+#     clean_data(ts_confirmed)
+#     clean_data(ts_death)
+#     clean_data(ts_recovered)
+#     #clean_data(df)
+#     #ts_confirmed.fillna(method='bfill', inplace=True, axis=1)
+    
+#     time_scale = ts_confirmed.columns[4:-1]
+#     '''
+#     Dash does not support datetime objects by default.
+#     You can solve this issue by converting your datetime object into an unix timestamp.
+#     '''
+#     time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
+    
+#     # ## Cleanup data
+#     # for index, row in df.iterrows():
+#     #       if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
+#     #           df['Province/State'][index] = None
+    
+#     # city_country = np.array(df['Province/State'] + ", " + df['Country/Region'] )
+#     # df["City/Country"] = city_country
+#     # #df['Province/State'].fillna(df['Country/Region'], inplace=True)
+#     # df['City/Country'].fillna(df['Country/Region'], inplace=True)
+    
+#     total_deaths = get_total(ts_death)
+#     #total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
+#     total_cases = get_total(ts_confirmed)
+    
+#     old_total_deaths = get_previous_total(ts_death)
+#     #old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
+#     old_total_cases = get_previous_total(ts_confirmed)
+    
+#     # total_recovered = df['Recovered'].sum(axis = 0, skipna = True)
+#     # total_cases = df['Confirmed'].sum(axis = 0, skipna = True)
+    
+#     # old_total_deaths = old_df['Deaths'].sum(axis = 0, skipna = True)
+#     # old_total_recovered = old_df['Recovered'].sum(axis = 0, skipna = True)
+#     # old_total_cases = old_df['Confirmed'].sum(axis = 0, skipna = True)
+    
+#     ## Change in stats
+#     # death_change = total_deaths - old_total_deaths
+#     # recovery_change = total_recovered - old_total_recovered
+#     # cases_change = total_cases - old_total_cases
+        
+#     return #total_cases, total_deaths, old_total_cases, old_total_deaths, ts_confirmed, time_scale, time_scale_unix
 
-def unix_to_date(unix_date):
-    ## In unix use - to remove leading 0 e.g %-m/%-d/%y
-    if os.name == 'nt':
-        date=datetime.datetime.fromtimestamp(unix_date).strftime("%#m/%#d/%y")
-    else:
-        date=datetime.datetime.fromtimestamp(unix_date).strftime("%-m/%-d/%y")     
-    return date
+@app.callback(Output('reco','children'), [Input('recovery-interval-component','n_intervals')])
+def update_recovery(n):
+    
+    ## Randomise scraping site times
+    global interval_state
+    interval_state = randint(60000, 180000)
+    
+    return "*"+get_total_recovered()
 
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
 def update_time_series(unix_date):    
@@ -594,8 +523,6 @@ def update_time_series(unix_date):
     filtered_ts_death = ts_death[listy[1:]].sum()
     filtered_ts_recovered = ts_recovered[listy[1:]].sum()
     
-    
-    
     trace0 = go.Scatter(x=listy[1:], y=filtered_ts_confirmed,
                         mode='lines',
                         name='Confirrmed',
@@ -626,6 +553,7 @@ def update_time_series(unix_date):
                             'size': 18,
                             'color': 'white'
                             },
+                       title="Global Cases",
                        xaxis={'gridcolor':'rgb(46,47,47)','autorange': True,},
                        yaxis={'gridcolor':'rgb(46,47,47)','autorange': True,'title':'Number of cases'},
                        hovermode='closest',
@@ -650,7 +578,7 @@ def update_time_series(unix_date):
         bordercolor="#f7f7f7",
         borderwidth=2,
     )
-)
+    )
 
     return fig
  
@@ -753,65 +681,7 @@ def update_map(selected_nation, selected_case, click, unix_date):
             zoom=zoom
         ),
     )
-   
-    '''
-    Uses data.csv, no time series remove 'Input('exclude-china','value'), Input('time-frame','value')' from
-    decorator if using code below
-    '''
-    
-    # zoom = 3    
-    
-    # filtered_df = df[df['Country/Region'].isin(selected_nation)] # Country Dropdown
-    
-    # if 'Worldwide' in selected_nation or not selected_nation: # Case Dropdown
-    #     filtered_df = df
-    #     zoom = 2
-    
-    # if not click:
-    #     filtered_df = filtered_df[filtered_df['Country/Region'] != 'China'] # China Checkbox
-    
-    # px.set_mapbox_access_token(mapbox_access_token)
-        
-    # if selected_case == 'Deaths':
-    #     #filtered_df = filtered_df[['Deaths','Latitude','Longitude','City/Country']]
-    #     fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", size="Deaths",
-    #                   size_max=100, hover_name="City/Country",
-    #                   hover_data=["Deaths"])
-    #     fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Red'))
-    # elif selected_case == 'Recovered':
-    #     fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", size="Recovered",
-    #                   size_max=100, hover_name="City/Country",
-    #                   hover_data=["Confirmed", "Recovered", "Deaths"] )
-    #     fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Green'))
-    # else:
-    #     fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", color="Deaths", size="Confirmed",
-    #                           #color_continuous_scale=px.colors.diverging.Picnic,
-    #                           size_max=50, hover_name="City/Country",
-    #                           hover_data=["Confirmed", "Recovered", "Deaths"] )
-    #     fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
-    
-    # fig.update(
-    #         layout=dict(title=dict(x=0.5), paper_bgcolor=colors['background'] )
-    #     )
-    
-    # fig.update_layout(
-    #     autosize=True,
-    #     height=750,
-    #     #width=1500,
-    #     hovermode='closest',
-    #     mapbox=dict(
-    #         accesstoken=mapbox_access_token,
-    #         bearing=0,
-    #         style="dark",
-    #         # center=dict(
-    #         #     lat=56,
-    #         #     lon=324
-    #         # ),
-    #         pitch=0,
-    #         zoom=zoom
-    #     ),
-    # )
-    
+       
     return fig
 
 if __name__ == '__main__':
