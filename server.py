@@ -69,6 +69,10 @@ def ads_txt():
 def news():
     return render_template('news.html', newsa=update_news())
 
+@server.route("/sitemap.xml")
+def sitemap():
+    return render_template("sitemap.xml")
+
 # @server.route('/tracker')
 # def tracker():
 #     return redirect('/tracker/')
@@ -78,7 +82,7 @@ def news():
 #     return redirect('/map/')
 
 # if __name__ == '__main__':
-#      #app.run(host='0.0.0.0', port=5000)
-#      #app.run(debug=True) #runs on default port 5000
-#      #server.run(debug=True, use_reloader=False)
-#      server.run()
+#       #app.run(host='0.0.0.0', port=5000)
+#       #app.run(debug=True) #runs on default port 5000
+#       #server.run(debug=True, use_reloader=False)
+#       server.run()
