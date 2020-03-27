@@ -5,8 +5,6 @@ Created on Thu Mar 12 19:39:52 2020
 @author: david
 """
 from server import server
-import pandas as pd
-import numpy as np
 import os
 from navbar import NationsDropdown, CasesDropdown, Navbar
 from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, get_total, get_previous_total, unix_to_date
@@ -21,7 +19,7 @@ import re
 from random import randint
 
 interval_state = 60000
-
+url = 'https://www.worldometers.info/coronavirus/'
 ts_confirmed, ts_death = get_jhu_dataset()
 ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
 
@@ -46,7 +44,7 @@ old_total_cases = get_previous_total(ts_confirmed)
 
 def get_num_countries_affected():
     
-    resp = req.get("https://www.worldometers.info/coronavirus/")
+    resp = req.get(url)
     
     pattern = '(\d+) countries'
     
@@ -58,11 +56,10 @@ def get_num_countries_affected():
     
     return a.group(1)
 
-def get_total_recovered():
-    resp = req.get("https://www.worldometers.info/coronavirus/")
-
-    pattern = 'Recovered:\s*(\d+.\d+)'
+def get_total(pattern):
+    resp = req.get(url)
     
+    #pattern = 'Deaths:\s*(\d+.\d+)'
     content = resp.text
     
     stripped = re.sub('<[^<]+?>', '', content)
@@ -70,7 +67,7 @@ def get_total_recovered():
     a = re.search(pattern, stripped)
     a = re.sub('\D', '', str(a.group(1)))
     
-    return a
+    return int(a)
 
 import dash_table
 
@@ -138,8 +135,8 @@ confirmed_card = [
     dbc.CardHeader("Total Confirmed Cases", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(total_cases, className="card-title", style={'textAlign':'center'}),
-            html.P("+{} in the last 24hrs".format(total_cases-old_total_cases),className="card-text", style={'textAlign':'center'}),
+            html.H2(id="con", className="card-title", style={'textAlign':'center'}),
+            html.P("+{} in the last 24hrs".format(get_total('Coronavirus Cases:\s*(\d+.\d+)')-old_total_cases),className="card-text", style={'textAlign':'center'}),
         ]
     ),
 ]
@@ -148,8 +145,8 @@ death_card = [
     dbc.CardHeader("Total Deaths", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(total_deaths, className="card-title", style={'textAlign':'center'}),
-            html.P("+{} in the last 24hrs".format(total_deaths-old_total_deaths),className="card-text", style={'textAlign':'center'}),
+            html.H2(id="dea", className="card-title", style={'textAlign':'center'}),
+            html.P("+{} in the last 24hrs".format(get_total('Deaths:\s*(\d+.\d+)')-old_total_deaths),className="card-text", style={'textAlign':'center'}),
         ]
     ),
 ]
@@ -188,6 +185,12 @@ affected_card = [
     ),
 ]
 
+progress = html.Div([
+        dbc.Progress(id="progress", className="mr-2 ml-2 mb-3", color="success",striped=True, animated=True),
+        dcc.Interval(id="progress-interval", n_intervals=0, interval=interval_state),
+    ])
+
+
 def get_outbrek_days():
     start = datetime.date(2019, 12, 31)
     today = datetime.date.today()
@@ -210,7 +213,7 @@ cards = html.Div([
                 dbc.Col(dbc.Card(days_card, color="light", style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
                 dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
                 dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
-                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
+                dbc.Col(children=[dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px', 'height':'85%'}), progress], width=12, lg=2),
                 dbc.Col(dbc.Card(mortality_card, color="warning", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
                 dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
             ],
@@ -484,14 +487,35 @@ import plotly.graph_objs as go
         
 #     return #total_cases, total_deaths, old_total_cases, old_total_deaths, ts_confirmed, time_scale, time_scale_unix
 
-@app.callback(Output('reco','children'), [Input('recovery-interval-component','n_intervals')])
-def update_recovery(n):
+@app.callback(
+    [Output("progress", "value"), Output("progress", "children")],
+    [Input("progress-interval", "n_intervals")],
+)
+def update_progress(n):
+    # check progress of some background process, in this example we'll just
+    # use n_intervals constrained to be in 0-100
+    progress = int(get_total('Recovered:\s*(\d+.\d+)') / (get_total('Coronavirus Cases:\s*(\d+.\d+)') - get_total('Deaths:\s*(\d+.\d+)')) *100)
+    # only add text after 5% progress to ensure text isn't squashed too much
+    return progress, f"{progress} %"
+
+@app.callback(
+    [Output('reco','children'), Output('con','children'), Output('dea','children')],
+    [Input('recovery-interval-component','n_intervals')])
+def update_cards(n):
     
     ## Randomise scraping site times
     global interval_state
     interval_state = randint(60000, 180000)
     
-    return "*"+get_total_recovered()
+    return "*"+"{:,d}".format(get_total('Recovered:\s*(\d+.\d+)')), "{:,d}".format(get_total('Coronavirus Cases:\s*(\d+.\d+)')), "{:,d}".format(get_total('Deaths:\s*(\d+.\d+)'))
+
+# @app.callback(Output('con','children'), [Input('recovery-interval-component','n_intervals')])
+# def update_confirmed(n):
+#     return "{:,d}".format(int(get_total('Coronavirus Cases:\s*(\d+.\d+)')))
+
+# @app.callback(Output('dea','children'), [Input('recovery-interval-component','n_intervals')])
+# def update_deaths(n):    
+#     return "{:,d}".format(int(get_total('Deaths:\s*(\d+.\d+)')))
 
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
 def update_time_series(unix_date):    
