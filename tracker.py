@@ -207,12 +207,12 @@ days_card = [
 cards = html.Div([
         dbc.Row(
             [
-                dbc.Col(dbc.Card(days_card, color="light", style={'margin':'10px'}), width=12, lg=2),
-                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px'}), width=12, lg=2),
-                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px'}), width=12, lg=2),
-                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px'}), width=12, lg=2),
-                dbc.Col(dbc.Card(mortality_card, color="warning", inverse=True, style={'margin':'10px'}), width=12, lg=2),
-                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px'}), width=12, lg=2),
+                dbc.Col(dbc.Card(days_card, color="light", style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
+                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
+                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
+                dbc.Col(dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
+                dbc.Col(dbc.Card(mortality_card, color="warning", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
+                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
             ],
             no_gutters=True,
         ),
