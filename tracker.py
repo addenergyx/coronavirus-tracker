@@ -304,8 +304,8 @@ body = html.Div([
     html.Div([
         dbc.Row(
             [
-                html.Div([NationsDropdown(ts_confirmed)]),
-                html.Div([CasesDropdown()]),
+                dbc.Col([NationsDropdown(ts_confirmed)]),
+                dbc.Col([CasesDropdown()]),
             ]
         )
     ]),
