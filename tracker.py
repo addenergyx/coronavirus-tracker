@@ -18,29 +18,63 @@ import re
 # generate random integer values
 from random import randint
 
+import time
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
+import plotly.graph_objs as go
+
+import plotly.express as px
+
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_bootstrap_components as dbc
+
+from dash.dependencies import Input, Output, State
+
+import dash_table
+
 interval_state = 100000
 url = 'https://www.worldometers.info/coronavirus/'
-ts_confirmed, ts_death = get_jhu_dataset()
-ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
 
-clean_data(ts_confirmed)
-clean_data(ts_death)
-clean_data(ts_recovered)
+# number of seconds between re-calculating the data                                                                                                                           
+UPDATE_INTERVAL = 3600
 
-time_scale = ts_confirmed.columns[4:-1]
-'''
-Dash does not support datetime objects by default.
-You can solve this issue by converting your datetime object into an unix timestamp.
-'''
-time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
+def get_new_data():
+    
+    """Updates the global variable 'data' with new data"""
+    global ts_confirmed, ts_death, ts_recovered
+    ts_confirmed, ts_death = get_jhu_dataset()
+    ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
+    
+    clean_data(ts_confirmed)
+    clean_data(ts_death)
+    clean_data(ts_recovered)
+    
+    '''
+    Dash does not support datetime objects by default.
+    You can solve this issue by converting your datetime object into an unix timestamp.
+    '''
+    global time_scale, time_scale_unix
+    time_scale = ts_confirmed.columns[4:-1]
+    time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
+    
+    global total_deaths, total_cases, old_total_deaths, old_total_cases
+    ##SHOULD PROBABLY GO IN OWN THREAD AND UPDATE MORE FREQUENTLY
+    total_deaths = get_total(ts_death)
+    #total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
+    total_cases = get_total(ts_confirmed)
+    
+    old_total_deaths = get_previous_total(ts_death)
+    #old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
+    old_total_cases = get_previous_total(ts_confirmed)
 
-total_deaths = get_total(ts_death)
-#total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
-total_cases = get_total(ts_confirmed)
-
-old_total_deaths = get_previous_total(ts_death)
-#old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
-old_total_cases = get_previous_total(ts_confirmed)
+def get_new_data_every(period=UPDATE_INTERVAL):
+    """Update the data every 'period' seconds"""
+    while True:
+        get_new_data()
+        print(str(datetime.datetime.now())+": data updated")
+        time.sleep(period)
 
 def get_num_countries_affected():
     
@@ -56,7 +90,7 @@ def get_num_countries_affected():
     
     return a.group(1)
 
-def get_total(pattern):
+def pull_total(pattern):
     resp = req.get(url)
     
     #pattern = 'Deaths:\s*(\d+.\d+)'
@@ -69,18 +103,7 @@ def get_total(pattern):
     
     return int(a)
 
-import dash_table
-
 mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
-
-import plotly.express as px
-
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_bootstrap_components as dbc
-
-from dash.dependencies import Input, Output, State
 
 #external_stylesheets =['https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
 #external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css','https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
@@ -131,6 +154,9 @@ app.title = 'Tracker'
 
 app.config.suppress_callback_exceptions = True
 
+# get initial data                                                                                                                                                            
+get_new_data()
+
 confirmed_card = [
     dbc.CardHeader("Total Confirmed Cases", style={'textAlign':'center'}),
     dbc.CardBody(
@@ -157,7 +183,7 @@ recovered_card = [
         [
             html.H2(id="reco", className="card-title", style={'textAlign':'center'}),
             #html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
-            html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'8px', #'padding-bottom':'8px'
+            html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'10px', #'padding-bottom':'8px'
                                                                                                                               }),
         ]
     ),
@@ -422,71 +448,17 @@ def Homepage():
     body
     ], style={'backgroundColor': colors['background']})
     return layout
-           
+
+# we need to set layout to be a function so that for each new page load                                                                                                       
+# the layout is re-created with the current data, otherwise they will see                                                                                                     
+# data that was generated when the Dash app was first initialised             
 app.layout = Homepage()
+
+#https://community.plotly.com/t/solved-updating-server-side-app-data-on-a-schedule/6612/3
+# Runs get_new_data function in another thread
+executor = ThreadPoolExecutor(max_workers=1)
+executor.submit(get_new_data_every)
   
-import plotly.graph_objs as go
-
-# @app.callback(Output('data','children'), [Input('data-interval-component','n_intervals')])
-# def update_dataset(n):
-#     #Data files
-#     # df = pd.read_csv('data.csv')
-#     # old_df = pd.read_csv('old_data.csv')
-    
-#     ## John hopkins stopped displaying recovery data
-#     #ts_recovered= pd.read_csv('time_series_19-covid-Recovered.csv')
-#     #ts_confirmed = pd.read_csv('time_series_covid19_confirmed_global.csv')
-#     #ts_death = pd.read_csv('time_series_covid19_deaths_global.csv')
-    
-#     ts_confirmed, ts_death = get_jhu_dataset()
-    
-#     ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
-    
-#     clean_data(ts_confirmed)
-#     clean_data(ts_death)
-#     clean_data(ts_recovered)
-#     #clean_data(df)
-#     #ts_confirmed.fillna(method='bfill', inplace=True, axis=1)
-    
-#     time_scale = ts_confirmed.columns[4:-1]
-#     '''
-#     Dash does not support datetime objects by default.
-#     You can solve this issue by converting your datetime object into an unix timestamp.
-#     '''
-#     time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
-    
-#     # ## Cleanup data
-#     # for index, row in df.iterrows():
-#     #       if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
-#     #           df['Province/State'][index] = None
-    
-#     # city_country = np.array(df['Province/State'] + ", " + df['Country/Region'] )
-#     # df["City/Country"] = city_country
-#     # #df['Province/State'].fillna(df['Country/Region'], inplace=True)
-#     # df['City/Country'].fillna(df['Country/Region'], inplace=True)
-    
-#     total_deaths = get_total(ts_death)
-#     #total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
-#     total_cases = get_total(ts_confirmed)
-    
-#     old_total_deaths = get_previous_total(ts_death)
-#     #old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
-#     old_total_cases = get_previous_total(ts_confirmed)
-    
-#     # total_recovered = df['Recovered'].sum(axis = 0, skipna = True)
-#     # total_cases = df['Confirmed'].sum(axis = 0, skipna = True)
-    
-#     # old_total_deaths = old_df['Deaths'].sum(axis = 0, skipna = True)
-#     # old_total_recovered = old_df['Recovered'].sum(axis = 0, skipna = True)
-#     # old_total_cases = old_df['Confirmed'].sum(axis = 0, skipna = True)
-    
-#     ## Change in stats
-#     # death_change = total_deaths - old_total_deaths
-#     # recovery_change = total_recovered - old_total_recovered
-#     # cases_change = total_cases - old_total_cases
-        
-#     return #total_cases, total_deaths, old_total_cases, old_total_deaths, ts_confirmed, time_scale, time_scale_unix
-
 @app.callback(
     [Output("progress", "value"), Output("progress", "children")],
     [Input("progress-interval", "n_intervals")],
@@ -494,27 +466,27 @@ import plotly.graph_objs as go
 def update_progress(n):
     # check progress of some background process, in this example we'll just
     # use n_intervals constrained to be in 0-100
-    progress = int(get_total('Recovered:\s*(\d+.\d+)') / (get_total('Coronavirus Cases:\s*(\d+.\d+)') - get_total('Deaths:\s*(\d+.\d+)')) *100)
+    progress = int(pull_total('Recovered:\s*(\d+.\d+)') / (pull_total('Coronavirus Cases:\s*(\d+.\d+)') - pull_total('Deaths:\s*(\d+.\d+)')) *100)
     # only add text after 5% progress to ensure text isn't squashed too much
     return progress, f"{progress} %"
 
 ## Using multi output slowed down dash considerably
 @app.callback(Output('reco','children'),[Input('recovery-interval-component','n_intervals')])
-def update_cards(n):
+def update_recovery(n):
     
     ## Randomise scraping site times
     global interval_state
     interval_state = randint(60000, 180000)
     
-    return "*"+"{:,d}".format(get_total('Recovered:\s*(\d+.\d+)'))
+    return "*"+"{:,d}".format(pull_total('Recovered:\s*(\d+.\d+)'))
 
 @app.callback(Output('con','children'), [Input('recovery-interval-component','n_intervals')])
 def update_confirmed(n):
-    return "{:,d}".format(int(get_total('Coronavirus Cases:\s*(\d+.\d+)')))
+    return "{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.\d+)')))
 
 @app.callback(Output('dea','children'), [Input('recovery-interval-component','n_intervals')])
 def update_deaths(n):    
-    return "{:,d}".format(int(get_total('Deaths:\s*(\d+.\d+)')))
+    return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
 def update_time_series(unix_date):    
@@ -539,7 +511,6 @@ def update_time_series(unix_date):
     # filtered_ts_death = ts_death[listy]
     # filtered_ts_recovered = ts_recovered[listy]
     #filtered_ts_df = ts_confirmed[['City/Country','3/3/20']]
-    
     
     ## Total events on a given day
     filtered_ts_confirmed = ts_confirmed[listy[1:]].sum()
