@@ -539,7 +539,7 @@ def update_time_series(unix_date):
                     fill='tozeroy'
                     )
     
-    data = [trace0, trace1, trace2]
+    data = [trace0,  trace2, trace1,]
     
     layout = go.Layout(paper_bgcolor='rgba(0,0,0,0)',
                        plot_bgcolor='rgba(0,0,0,0)',
