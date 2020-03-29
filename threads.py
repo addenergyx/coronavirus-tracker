@@ -15,7 +15,7 @@ import plotly.graph_objs as go
 import numpy as np
 
 # number of seconds between re-calculating the data                                                                                                                           
-UPDADE_INTERVAL = 5
+UPDADE_INTERVAL = 30
 
 def get_new_data():
     """Updates the global variable 'data' with new data"""
