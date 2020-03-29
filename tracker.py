@@ -9,7 +9,6 @@ import os
 from navbar import NationsDropdown, CasesDropdown, Navbar
 from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, get_total, get_previous_total, unix_to_date
 
-import time
 import datetime
 
 import requests as req
