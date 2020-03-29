@@ -37,7 +37,7 @@ interval_state = 100000
 url = 'https://www.worldometers.info/coronavirus/'
 
 # number of seconds between re-calculating the data                                                                                                                           
-UPDATE_INTERVAL = 3600
+UPDATE_INTERVAL = 5
 
 def get_new_data():
     
