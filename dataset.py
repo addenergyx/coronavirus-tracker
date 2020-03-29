@@ -76,17 +76,17 @@ def clean_data(frame):
     frame['City/Country'].fillna(frame['Country/Region'], inplace=True)
     #frame.ffill()
 
-# def get_recovery_frame(confirmed, death):
+def get_recovery_frame(confirmed, death):
 
-#     aaa = confirmed[confirmed.columns[4:]]
-#     bbb = death[death.columns[4:]]
+    aaa = confirmed[confirmed.columns[4:]]
+    bbb = death[death.columns[4:]]
     
-#     ccc = aaa.subtract(bbb)
+    ccc = aaa.subtract(bbb)
 
-#     ts_recovered = confirmed[['Province/State','Country/Region', 'Lat','Long']]
-#     ts_recovered = ts_recovered.join(ccc)
+    ts_recovered = confirmed[['Province/State','Country/Region', 'Lat','Long']]
+    ts_recovered = ts_recovered.join(ccc)
     
-#     return ts_recovered
+    return ts_recovered
 
 def getMarks(time_scale, time_scale_unix, Nth=4):
     ''' Returns the marks for labeling. 
