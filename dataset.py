@@ -12,6 +12,8 @@ import pandas as pd
 import COVID19Py
 import os
 import numpy as np
+import requests
+from geopy.geocoders import Nominatim, GoogleV3
 
 ## Date column names
 def getList(dict): 
@@ -74,17 +76,17 @@ def clean_data(frame):
     frame['City/Country'].fillna(frame['Country/Region'], inplace=True)
     #frame.ffill()
 
-def get_recovery_frame(confirmed, death):
+# def get_recovery_frame(confirmed, death):
 
-    aaa = confirmed[confirmed.columns[4:]]
-    bbb = death[death.columns[4:]]
+#     aaa = confirmed[confirmed.columns[4:]]
+#     bbb = death[death.columns[4:]]
     
-    ccc = aaa.subtract(bbb)
+#     ccc = aaa.subtract(bbb)
 
-    ts_recovered = confirmed[['Province/State','Country/Region', 'Lat','Long']]
-    ts_recovered = ts_recovered.join(ccc)
+#     ts_recovered = confirmed[['Province/State','Country/Region', 'Lat','Long']]
+#     ts_recovered = ts_recovered.join(ccc)
     
-    return ts_recovered
+#     return ts_recovered
 
 def getMarks(time_scale, time_scale_unix, Nth=4):
     ''' Returns the marks for labeling. 
@@ -111,7 +113,44 @@ def unix_to_date(unix_date):
         date=datetime.datetime.fromtimestamp(unix_date).strftime("%-m/%-d/%y")     
     return date
 
-
+def get_recovery_dataset():
+    
+    url = 'https://pomber.github.io/covid19/timeseries.json'
+    
+    r = requests.get(url)
+    
+    countries = r.json()
+    
+    temp = countries['Italy']
+    
+    dates = [x['date'] for x in temp]
+    
+    column_names = ['Province/State','Country/Region', 'Lat', 'Long']
+    
+    if os.name == 'nt':
+        column_names.extend([datetime.datetime.strptime(x, "%Y-%m-%d").strftime("%#m/%#d/%y") for x in dates])
+    else:
+        column_names.extend([datetime.datetime.strptime(x, "%Y-%m-%d").strftime("%-m/%-d/%y") for x in dates])
+        
+    recovery_row_list = []
+    
+    #geolocator = GoogleV3(api_key=os.getenv('MAPS_API_KEY') , user_agent="Covid Map") #Google is faster but breaks
+    geolocator = Nominatim(timeout=1000 , user_agent="http://www.coronavirustracker.co.uk/tracker/")
+    
+    for country,times in countries.items():
+        
+        #print(country)
+        location = geolocator.geocode(country)
+        row = [None, country, location.latitude, location.longitude]
+        
+        for a in times:
+            row.append(a['recovered'])
+        
+        recovery_row_list.append(row)
+    
+    recovery = pd.DataFrame(recovery_row_list, columns=column_names)       
+    
+    return recovery
 
 
 

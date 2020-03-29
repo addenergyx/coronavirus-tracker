@@ -54,7 +54,7 @@ def CasesDropdown():
                             {'label':'All','value':'All'},
                             {'label':'Confirmed','value':'Confirmed'},
                             {'label':'Deaths','value':'Deaths'},
-                            {'label':'Active/Recovered','value':'Active/Recovered'},
+                            {'label':'Recovered','value':'Recovered'},
                         ],
                         value='All',
                         className='dropdown',

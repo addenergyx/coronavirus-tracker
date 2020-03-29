@@ -7,13 +7,13 @@ Created on Thu Mar 12 19:39:52 2020
 from server import server
 import os
 from navbar import NationsDropdown, CasesDropdown, Navbar
-from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, get_total, get_previous_total, unix_to_date
+from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset
 
 import datetime
 
 import requests as req
 import re
-
+import pandas as pd
 # generate random integer values
 from random import randint
 
@@ -44,7 +44,9 @@ def get_new_data():
     """Updates the global variable 'data' with new data"""
     global ts_confirmed, ts_death, ts_recovered
     ts_confirmed, ts_death = get_jhu_dataset()
-    ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
+    #ts_recovered = get_recovery_dataset()   
+  
+    ts_recovered = pd.read_csv('out.csv')
     
     clean_data(ts_confirmed)
     clean_data(ts_death)
@@ -258,7 +260,7 @@ modal = html.Div(
             [
                 dbc.ModalHeader("Recovery Data"),
                 dbc.ModalBody("John Hopkins University which is the source for this data has decided to drop support for recovery data." +
-                              " Active/Recovery will be Confirmed - Deaths till an alternative source is found. Sorry for the inconvenience"),
+                              "There is now recovery data for most but not all countries. Sorry for the inconvenience"),
                 dbc.ModalFooter(
                     dbc.Button("Close", id="close", className="ml-auto")
                 ),
@@ -520,21 +522,21 @@ def update_time_series(unix_date):
                         mode='lines',
                         name='Confirrmed',
                         line = {'color':'#0275d8'},
-                        #fill='tozeroy'
+                        fill='tozeroy'
                         )
     
     trace1 = go.Scatter(x=listy[1:], y=filtered_ts_death,
                     mode='lines',
                     name='Deaths',
                     line = {'color':'#d9534f'},
-                    #fill='tozeroy'
+                    fill='tozeroy'
                     )
 
     trace2 = go.Scatter(x=listy[1:], y=filtered_ts_recovered,
                     mode='lines',
                     name='Active or Recovered',
                     line = {'color':'#5cb85c'},
-                    #fill='tozeroy'
+                    fill='tozeroy'
                     )
     
     data = [trace0, trace1, trace2]
@@ -621,24 +623,24 @@ def update_map(selected_nation, selected_case, click, unix_date):
         
     ## Rename columns to prettify hover data
     temp_deaths_df = filtered_ts_death.rename(columns = {date:'Deaths', 'Lat':'Latitude', 'Long':'Longitude'})
-    temp_recovered_df = filtered_ts_recovered.rename(columns = {date:'Active/Recovered', 'Lat':'Latitude', 'Long':'Longitude'})
+    temp_recovered_df = filtered_ts_recovered.rename(columns = {date:'Recovered', 'Lat':'Latitude', 'Long':'Longitude'})
     temp_confirmed_df = filtered_ts_confirmed.rename(columns = {date:'Confirmed', 'Lat':'Latitude', 'Long':'Longitude'})
 
     #Some data from JHU appears as -1 unsure why
-    temp_recovered_df[temp_recovered_df['Active/Recovered'] < 0] = 0
+    temp_recovered_df[temp_recovered_df['Recovered'] < 0] = 0
     temp_confirmed_df[temp_confirmed_df['Confirmed'] < 0] = 0
     temp_deaths_df[temp_deaths_df['Deaths'] < 0] = 0
 
     #assumes order of countries from datasets are the same
     temp_all = temp_confirmed_df[['City/Country', 'Confirmed','Latitude','Longitude']]
     temp_all.insert(2,'Deaths', temp_deaths_df[['Deaths']])
-    temp_all.insert(2,'Active/Recovered',temp_recovered_df[['Active/Recovered']])
+    temp_all.insert(2,'Recovered',temp_recovered_df[['Recovered']])
     
     if selected_case == 'Deaths':
         fig = px.scatter_mapbox(temp_deaths_df, lat="Latitude", lon="Longitude", size='Deaths', size_max=100, hover_name="City/Country")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Red'))
-    elif selected_case == 'Active/Recovered':
-        fig = px.scatter_mapbox(temp_recovered_df, lat="Latitude", lon="Longitude", size="Active/Recovered",
+    elif selected_case == 'Recovered':
+        fig = px.scatter_mapbox(temp_recovered_df, lat="Latitude", lon="Longitude", size="Recovered",
                       size_max=100, hover_name="City/Country")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Green'))
     elif selected_case == 'Confirmed':
@@ -649,7 +651,8 @@ def update_map(selected_nation, selected_case, click, unix_date):
         fig = px.scatter_mapbox(temp_all, lat="Latitude", lon="Longitude", color="Deaths", size="Confirmed",
                               #color_continuous_scale=px.colors.diverging.Picnic,
                               size_max=50, hover_name="City/Country",
-                              hover_data=["Confirmed", "Active/Recovered", "Deaths"] 
+                              #hover_data=["Confirmed", "Recovered", "Deaths"], 
+                              hover_data=["Confirmed", "Deaths"], 
                               )
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
     
