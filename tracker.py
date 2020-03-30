@@ -44,9 +44,9 @@ def get_new_data():
     """Updates the global variable 'data' with new data"""
     global ts_confirmed, ts_death, ts_recovered
     ts_confirmed, ts_death = get_jhu_dataset()
-    #ts_recovered = get_recovery_dataset()   
+    ts_recovered = get_recovery_dataset()   
   
-    ts_recovered = pd.read_csv('out.csv')
+    #ts_recovered = pd.read_csv('out.csv')
     
     clean_data(ts_confirmed)
     clean_data(ts_death)
