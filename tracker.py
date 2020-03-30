@@ -7,7 +7,7 @@ Created on Thu Mar 12 19:39:52 2020
 from server import server
 import os
 from navbar import NationsDropdown, CasesDropdown, Navbar
-from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset
+from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff
 
 import datetime
 
@@ -17,7 +17,6 @@ import pandas as pd
 # generate random integer values
 from random import randint
 
-import time
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 import plotly.graph_objs as go
@@ -42,40 +41,39 @@ UPDATE_INTERVAL = 3600
 def get_new_data():
     
     """Updates the global variable 'data' with new data"""
-    global ts_confirmed, ts_death, ts_recovered
-    ts_confirmed, ts_death = get_jhu_dataset()
-    #ts_recovered = get_recovery_dataset()   
+    # Global variables will break the app https://dash.plotly.com/sharing-data-between-callbacks
+    #global ts_confirmed, ts_death, ts_recovered
+    # ts_confirmed, ts_death = get_jhu_dataset()
+    # #ts_recovered = get_recovery_dataset()   
   
-    ts_recovered = pd.read_csv('out.csv')
-    
-    clean_data(ts_confirmed)
-    clean_data(ts_death)
-    clean_data(ts_recovered)
+    # ts_recovered = pd.read_csv('recovered.csv')
+
+    #clean_data(ts_recovered)
     
     '''
     Dash does not support datetime objects by default.
     You can solve this issue by converting your datetime object into an unix timestamp.
     '''
-    global time_scale, time_scale_unix
-    time_scale = ts_confirmed.columns[4:-1]
-    time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
+    # global time_scale, time_scale_unix
+    # time_scale = ts_confirmed.columns[4:-1]
+    # time_scale_unix = [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in time_scale]
     
-    global total_deaths, total_cases, old_total_deaths, old_total_cases
-    ##SHOULD PROBABLY GO IN OWN THREAD AND UPDATE MORE FREQUENTLY
-    total_deaths = get_total(ts_death)
-    #total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
-    total_cases = get_total(ts_confirmed)
+    # global total_deaths, total_cases, old_total_deaths, old_total_cases
+    # ##SHOULD PROBABLY GO IN OWN THREAD AND UPDATE MORE FREQUENTLY
+    # total_deaths = get_total(ts_death)
+    # #total_recovered = ts_recovered.iloc[:,-2].sum(axis = 0, skipna = True)
+    # total_cases = get_total(clean_data(ts_confirmed))
     
-    old_total_deaths = get_previous_total(ts_death)
-    #old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
-    old_total_cases = get_previous_total(ts_confirmed)
+    # old_total_deaths = get_previous_total(clean_data(ts_death))
+    # #old_total_recovered = ts_recovered.iloc[:,-3].sum(axis = 0, skipna = True)
+    # old_total_cases = get_previous_total(clean_data(ts_confirmed))
 
-def get_new_data_every(period=UPDATE_INTERVAL):
-    """Update the data every 'period' seconds"""
-    while True:
-        get_new_data()
-        print(str(datetime.datetime.now())+": data updated")
-        time.sleep(period)
+# def get_new_data_every(period=UPDATE_INTERVAL):
+#     """Update the data every 'period' seconds"""
+#     while True:
+#         get_new_data()
+#         print(str(datetime.datetime.now())+": data updated")
+#         time.sleep(period)
 
 def get_num_countries_affected():
     
@@ -103,6 +101,9 @@ def pull_total(pattern):
     a = re.sub('\D', '', str(a.group(1)))
     
     return int(a)
+
+# get initial data                                                                                                                                                            
+get_new_data()
 
 mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
 
@@ -155,15 +156,12 @@ app.title = 'Tracker'
 
 app.config.suppress_callback_exceptions = True
 
-# get initial data                                                                                                                                                            
-get_new_data()
-
 confirmed_card = [
     dbc.CardHeader("Total Confirmed Cases", style={'textAlign':'center'}),
     dbc.CardBody(
         [
             html.H2(id="con", className="card-title", style={'textAlign':'center'}),
-            html.P("+{} in the last 24hrs".format(total_cases-old_total_cases),className="card-text", style={'textAlign':'center'}),
+            html.P("+{} in the last 24hrs".format(get_cases_diff()),className="card-text", style={'textAlign':'center'}),
         ]
     ),
 ]
@@ -173,7 +171,7 @@ death_card = [
     dbc.CardBody(
         [
             html.H2(id="dea", className="card-title", style={'textAlign':'center'}),
-            html.P("+{} in the last 24hrs".format(total_deaths-old_total_deaths),className="card-text", style={'textAlign':'center'}),
+            html.P("+{} in the last 24hrs".format(get_deaths_diff()),className="card-text", style={'textAlign':'center'}),
         ]
     ),
 ]
@@ -194,7 +192,7 @@ mortality_card = [
     dbc.CardHeader("Global Mortality Rate", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2('{0:.2f}%'.format((total_deaths / total_cases)*100), className="card-title card-style"),
+            html.H2('{0:.2f}%'.format((get_deaths_diff() / get_cases_diff())*100), className="card-title card-style"),
             #html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
             html.Br(),
         ]
@@ -301,16 +299,16 @@ body = html.Div([
     html.Div([
         dcc.Slider(
             id='time-frame',
-            min = time_scale_unix[0],
-            max = time_scale_unix[-1],
-            value = time_scale_unix[-1],
+            min = getTimeScaleUnix()[0],
+            max = getTimeScaleUnix()[-1],
+            value = getTimeScaleUnix()[-1],
             #updatemode='drag',
             #tooltip = { 'always_visible': True },
-            marks=getMarks(time_scale, time_scale_unix),
+            marks=getMarks(),
             step=1,
             ),
         dcc.Interval(id='data-interval-component',
-            interval=2000,
+            interval=3600000,
             n_intervals=0,
             )
     ]),
@@ -331,7 +329,7 @@ body = html.Div([
     html.Div([
         dbc.Row(
             [
-                dbc.Col([NationsDropdown(ts_confirmed)]),
+                dbc.Col([NationsDropdown(pd.read_csv('confirmed.csv'))]),
                 dbc.Col([CasesDropdown()]),
             ]
         )
@@ -396,6 +394,11 @@ body = html.Div([
     #         ], style={'padding-top': '50px'}),
     # ]),
     
+    html.Div([html.H1("Testtttttt")]),
+    html.Div(id='recovery-intermediate-value', style={'display': 'none'}),
+    html.Div(id='confirmed-intermediate-value', style={'display': 'none'}),
+    html.Div(id='deaths-intermediate-value', style={'display': 'none'}),
+    
     # Footer
     html.Div(
         className='row',
@@ -457,9 +460,32 @@ app.layout = Homepage()
 
 #https://community.plotly.com/t/solved-updating-server-side-app-data-on-a-schedule/6612/3
 # Runs get_new_data function in another thread
-executor = ThreadPoolExecutor(max_workers=1)
-executor.submit(get_new_data_every)
-  
+# executor = ThreadPoolExecutor(max_workers=1)
+# executor.submit(get_new_data_every)
+
+@app.callback(Output("recovery-intermediate-value", "children"),[Input("data-interval-component", "n_intervals")])
+def update_data(n):
+   
+    ts_confirmed, ts_death = get_jhu_dataset()
+    ts_recovered = pd.read_csv('recovered.csv')
+    #ts_recovered = get_recovery_dataset() 
+
+    clean_data(ts_confirmed)
+    clean_data(ts_death)
+    clean_data(ts_recovered)
+
+    ts_confirmed.to_csv('confirmed.csv', index=False)
+    ts_death.to_csv('deaths.csv', index=False)
+    ts_recovered.to_csv('recovered.csv', index=False)
+    
+    # clean_data(ts_confirmed)
+    # clean_data(ts_death)
+    # clean_data(ts_recovered)
+    
+    print("All Data Updated")
+    
+    return "Data Updated"
+
 @app.callback(
     [Output("progress", "value"), Output("progress", "children")],
     [Input("progress-interval", "n_intervals")],
@@ -490,22 +516,28 @@ def update_deaths(n):
     return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
-def update_time_series(unix_date):    
+def update_graph(unix_date):    
     
-    #unix_date=1580256000
+    ts_recovered = pd.read_csv('recovered.csv')
+    ts_confirmed = pd.read_csv('confirmed.csv')
+    ts_death = pd.read_csv('deaths.csv')
+    
+    #unix_date=1585440000
+
+    #clean_data(ts_recovered)  
     
     date = unix_to_date(unix_date)
       
     listy = []
     
-    for a in time_scale:
+    for a in getTimeScale():
         listy.append(a)
         #print(a +' ? '+ date)
         if a == date:
             #print('-------------------------')
             break
     
-    listy.insert(0,'City/Country')
+    #listy.insert(0,'City/Country')
     
     #for individual countries    
     # filtered_ts_confirmed = ts_confirmed[listy]
@@ -593,6 +625,13 @@ def update_map(selected_nation, selected_case, click, unix_date):
     
     #unix_date=1585008000
     #selected_nation=['Worldwide']
+    
+    ts_confirmed = pd.read_csv('confirmed.csv')
+    ts_death = pd.read_csv('deaths.csv')
+    clean_data(ts_confirmed)
+    
+    ts_recovered = pd.read_csv('recovered.csv')
+    
     
     date = unix_to_date(unix_date)
     #date='3/25/20'

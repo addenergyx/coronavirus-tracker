@@ -8,6 +8,7 @@ Created on Wed Mar 25 13:26:07 2020
 ## Rebuilding JHU Dataset from api request
 
 import datetime
+import time
 import pandas as pd
 import COVID19Py
 import os
@@ -63,6 +64,9 @@ def get_jhu_dataset():
     confirmed_df = pd.DataFrame(confirmed_row_list, columns=names)               
     deaths_df = pd.DataFrame(deaths_row_list, columns=names)
 
+    confirmed_df.to_csv('confirmed.csv', index=False)
+    deaths_df.to_csv('deaths.csv', index=False)
+
     return confirmed_df, deaths_df
 
 def clean_data(frame):
@@ -88,16 +92,35 @@ def get_recovery_frame(confirmed, death):
     
     return ts_recovered
 
-def getMarks(time_scale, time_scale_unix, Nth=4):
+def getTimeScale():
+    return pd.read_csv('confirmed.csv').columns[4:-1]
+
+def getTimeScaleUnix():
+    return [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in getTimeScale()]
+
+def getMarks(Nth=4):
+    
     ''' Returns the marks for labeling. 
         Every Nth value will be used.
     '''
+    
+    time_scale = getTimeScale()
+    time_scale_unix = getTimeScaleUnix()
+    
     result = {}
     for i, date in enumerate(time_scale):
         if(i%Nth == 1):
             # Append value to dict
             result[time_scale_unix[i]] = time_scale[i]
     return result
+
+def get_deaths_diff():
+    frame = pd.read_csv('deaths.csv')
+    return frame.iloc[:,-2].sum(axis = 0, skipna = True) - (frame.iloc[:,-3].sum(axis = 0, skipna = True))
+
+def get_cases_diff():
+    frame = pd.read_csv('confirmed.csv')
+    return frame.iloc[:,-2].sum(axis = 0, skipna = True) - (frame.iloc[:,-3].sum(axis = 0, skipna = True))
 
 def get_total(frame):
     return frame.iloc[:,-2].sum(axis = 0, skipna = True)
@@ -137,6 +160,7 @@ def get_recovery_dataset():
     #geolocator = GoogleV3(api_key=os.getenv('MAPS_API_KEY') , user_agent="Covid Map") #Google is faster but breaks
     geolocator = Nominatim(timeout=1000 , user_agent="http://www.coronavirustracker.co.uk/tracker/")
     
+    print("Updating Recovery Data")
     for country,times in countries.items():
         
         #print(country)
@@ -148,11 +172,12 @@ def get_recovery_dataset():
         
         recovery_row_list.append(row)
     
-    recovery = pd.DataFrame(recovery_row_list, columns=column_names)       
-    #recovery.to_csv('out.csv')
+    recovery = pd.DataFrame(recovery_row_list, columns=column_names)
+    
+    #clean_data(recovery)
+       
+    recovery.to_csv('recovered.csv', index=False)
     
     return recovery
-
-
 
 
