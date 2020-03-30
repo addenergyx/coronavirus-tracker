@@ -564,7 +564,7 @@ def update_graph(unix_date):
 
     trace2 = go.Scatter(x=listy[1:], y=filtered_ts_recovered,
                     mode='lines',
-                    name='Active or Recovered',
+                    name='Recovered',
                     line = {'color':'#5cb85c'},
                     fill='tozeroy'
                     )
