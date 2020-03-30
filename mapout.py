@@ -14,7 +14,7 @@ import dash_daq as daq
 from dash.dependencies import Input, Output
 import numpy as np
 from navbar import NationsDropdown, CasesDropdown, Navbar
-from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, unix_to_date
+from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, unix_to_date, getTimeScaleUnix, getTimeScale
 
 import plotly.express as px
 from newsapi import NewsApiClient
@@ -169,12 +169,12 @@ body = html.Div(
                         html.Div([
                             dcc.Slider(
                                 id='time-frame',
-                                min = time_scale_unix[0],
-                                max = time_scale_unix[-1],
-                                value = time_scale_unix[-1],
+                                min = getTimeScaleUnix()[0],
+                                max = getTimeScaleUnix()[-1],
+                                value = getTimeScaleUnix()[-1],
                                 #updatemode='drag',
                                 #tooltip = { 'always_visible': True },
-                                marks=getMarks(time_scale, time_scale_unix, 10),
+                                marks=getMarks(12),
                                 step=1,
                             ),
                         ]),

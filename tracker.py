@@ -17,8 +17,6 @@ import pandas as pd
 # generate random integer values
 from random import randint
 
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-
 import plotly.graph_objs as go
 
 import plotly.express as px
@@ -103,7 +101,7 @@ def pull_total(pattern):
     return int(a)
 
 # get initial data                                                                                                                                                            
-get_new_data()
+#get_new_data()
 
 mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
 
@@ -467,8 +465,8 @@ app.layout = Homepage()
 def update_data(n):
    
     ts_confirmed, ts_death = get_jhu_dataset()
-    ts_recovered = pd.read_csv('recovered.csv')
-    #ts_recovered = get_recovery_dataset() 
+    #ts_recovered = pd.read_csv('recovered.csv')
+    ts_recovered = get_recovery_dataset() 
 
     clean_data(ts_confirmed)
     clean_data(ts_death)
@@ -631,7 +629,6 @@ def update_map(selected_nation, selected_case, click, unix_date):
     clean_data(ts_confirmed)
     
     ts_recovered = pd.read_csv('recovered.csv')
-    
     
     date = unix_to_date(unix_date)
     #date='3/25/20'
