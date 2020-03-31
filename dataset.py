@@ -86,8 +86,8 @@ def clean_data(frame):
 
 def get_recovery_frame(confirmed, death):
 
-    aaa = confirmed[confirmed.columns[4:]]
-    bbb = death[death.columns[4:]]
+    aaa = confirmed[confirmed.columns[4:-1]]
+    bbb = death[death.columns[4:-1]]
     
     ccc = aaa.subtract(bbb)
 
