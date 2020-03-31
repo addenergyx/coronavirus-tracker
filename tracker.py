@@ -462,7 +462,7 @@ app.layout = Homepage()
 def update_data(n):
    
     ts_confirmed, ts_death = get_jhu_dataset()
-    ts_recovered = pd.read_csv('recovered.csv')
+    #ts_recovered = pd.read_csv('recovered.csv')
     ts_recovered = get_recovery_dataset() 
 
     clean_data(ts_confirmed)
@@ -519,7 +519,7 @@ def update_graph(unix_date):
     
     #unix_date=1585440000
 
-    clean_data(ts_recovered)  
+    #clean_data(ts_recovered)  
     
     date = unix_to_date(unix_date)
       
@@ -618,13 +618,11 @@ def toggle_modal(n1, n2, is_open):
                                                Input('exclude-china','value'), Input('time-frame','value')])
 def update_map(selected_nation, selected_case, click, unix_date):
     
-    unix_date=1585008000
+    #unix_date=1585008000
     #selected_nation=['Worldwide']
     
     ts_confirmed = pd.read_csv('confirmed.csv')
-    ts_death = pd.read_csv('deaths.csv')
-    clean_data(ts_confirmed)
-    
+    ts_death = pd.read_csv('deaths.csv')    
     ts_recovered = pd.read_csv('recovered.csv')
     
     date = unix_to_date(unix_date)

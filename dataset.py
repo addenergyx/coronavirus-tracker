@@ -63,7 +63,11 @@ def get_jhu_dataset():
     
     confirmed_df = pd.DataFrame(confirmed_row_list, columns=names)               
     deaths_df = pd.DataFrame(deaths_row_list, columns=names)
+    
+    clean_data(confirmed_df)
+    clean_data(deaths_df)
 
+    
     confirmed_df.to_csv('confirmed.csv', index=False)
     deaths_df.to_csv('deaths.csv', index=False)
 
@@ -174,7 +178,7 @@ def get_recovery_dataset():
     
     recovery = pd.DataFrame(recovery_row_list, columns=column_names)
     
-    #clean_data(recovery)
+    clean_data(recovery)
        
     recovery.to_csv('recovered.csv', index=False)
     
