@@ -10,6 +10,7 @@ import os
 from urllib.parse import urlparse
 from flask import Flask, render_template, make_response, request
 from newsapi import NewsApiClient
+import dateutil.parser as dparser
 
 # Initialises flask application
 server = Flask(__name__, static_folder='assets')
@@ -30,15 +31,18 @@ def update_news():
     
     titles = []
     urls = []
+    dates= []
     urlToImages = []
     descriptions = []
     for a in articles:
         titles.append(a['title'])
         urls.append(a['url'])
         urlToImages.append(a['urlToImage'])
-        descriptions.append(a['description'])
-    
-    d = {'Title':titles,'Url':urls, 'urlToImage':urlToImages, 'Description':descriptions}
+        descriptions.append(a['description'])                                                                                      
+        
+        dates.append(dparser.parse(a['publishedAt'], fuzzy=True).strftime("%d %B %y %H:%M:%S"))
+            
+    d = {'Title':titles,'Url':urls, 'urlToImage':urlToImages, 'Description':descriptions, 'Date':dates}
     
     news_df = pd.DataFrame(d)
 
@@ -112,5 +116,5 @@ def sitemap():
 # if __name__ == '__main__':
 #       #app.run(host='0.0.0.0', port=5000)
 #       #app.run(debug=True) #runs on default port 5000
-#       #server.run(debug=True, use_reloader=False)
-#       server.run()
+#       server.run(debug=True, use_reloader=False)
+#       #server.run()
