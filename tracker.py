@@ -510,7 +510,7 @@ def update_deaths(n):
     return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value'), Input("data-interval-component", "n_intervals")])
-def update_graph(unix_date):    
+def update_graph(unix_date, n):    
     
     ts_recovered = pd.read_csv('recovered.csv')
     ts_confirmed = pd.read_csv('confirmed.csv')
