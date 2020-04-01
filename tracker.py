@@ -465,8 +465,8 @@ app.layout = Homepage()
 def update_data(n):
    
     ts_confirmed, ts_death = get_jhu_dataset()
-    ts_recovered = pd.read_csv('recovered.csv')
-    #ts_recovered = get_recovery_dataset() 
+    #ts_recovered = pd.read_csv('recovered.csv')
+    ts_recovered = get_recovery_dataset() 
 
     clean_data(ts_confirmed)
     clean_data(ts_death)
