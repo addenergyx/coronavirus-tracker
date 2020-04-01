@@ -159,7 +159,7 @@ app.index_string = '''
 </html>
 '''
 
-app.title = 'Tracker'
+app.title = 'Live Coronavirus Tracker'
 
 app.config.suppress_callback_exceptions = True
 
@@ -268,7 +268,7 @@ modal = html.Div(
             ],
             id="modal",
         ), 
-    ], style={'padding-right':'20px'},
+    ], style={'padding-right':'20px','padding-bottom':'40px'},
 )
 
 body = html.Div([
@@ -316,18 +316,37 @@ body = html.Div([
             )
     ]),
     
-    html.Div(id='data'),
+    #html.Div(id='data'),
     
     html.Div(modal),
     
+    ## CHARTS ROW
     html.Div([
-        dcc.Graph(
-            id='time-series-confirmed',
+        dbc.Row(
+            [
+                
+            ## PIE CHART
+            dbc.Col(
+                html.Div(
+                    [
+                        #html.P('Cases Distribution', style={'color':colors['text'], 'textAlign':'left'}),
+                        dcc.Graph(id='pie-chart',)
+                    ]
+                ), width=3),          
+            
+            ## LINE GRAPH
+            dbc.Col(
+                html.Div(
+                    [
+                        dcc.Graph(id='time-series-confirmed'),
+                    ]
+                ),width=9),
+             
+            ]
         )
-    ],style={'padding-bottom': 40,
-             'padding-right': 40,
-             'padding-left': 40,}),
-        
+    ], style={'padding-bottom':'20px'}),
+    #style={'padding-bottom': 40, 'padding-right': 40, 'padding-left': 40,}
+    
     ## DROPDOWN ROW
     html.Div([
         dbc.Row(
@@ -481,6 +500,47 @@ app.layout = Homepage()
 #     max_value = max(df_data_FW[input])
 #     return max_value
 
+@app.callback(Output("pie-chart", "figure"),[Input('time-frame','value')])
+def update_pie(unix_date):
+    
+    ts_recovered = pd.read_csv('recovered.csv')
+    ts_death = pd.read_csv('deaths.csv')
+    ts_confirmed = pd.read_csv('confirmed.csv')
+
+    #unix_date=1585440000
+    
+    date = unix_to_date(unix_date)
+    
+    active = ts_confirmed[date].sum() - ts_death[date].sum() - ts_recovered[date].sum()
+    
+    labels = ['Recovered','Deaths','Active']
+    values = [ts_recovered[date].sum(),ts_death[date].sum(),active]
+    
+    #df = pd.DataFrame(data)
+    
+    # ts_recovered[date].sum()
+    # ts_death[date].sum()
+    # ts_confirmed[date].sum()
+
+    colors = ['#5cb85c', '#d9534f', '#f0ad4e']
+
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3, titlefont=dict(color='white', size=20) )])
+    
+    fig.update_traces(hoverinfo='label+percent+value', textinfo='none', textfont_size=20,
+                  marker=dict(colors=colors))
+    
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        legend = dict(font = dict(color='white')),
+                               transition={
+                            'duration': 500,
+                            'easing': 'cubic-in-out',}
+        )
+    
+    
+    return fig
+
 @app.callback(
     [#Output('time-frame','value'),
      Output('time-frame','min'),
@@ -556,8 +616,6 @@ def update_graph(unix_date):
     ts_death = pd.read_csv('deaths.csv')
     
     #unix_date=1585440000
-
-    #clean_data(ts_recovered)  
     
     date = unix_to_date(unix_date)
       
@@ -751,9 +809,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
-    #app.run_server()
+# if __name__ == '__main__':
+#     app.run_server(debug=True, use_reloader=False)
+#     #app.run_server()
 
 
 
