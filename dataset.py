@@ -130,6 +130,10 @@ def get_cases_diff():
     frame = pd.read_csv('confirmed.csv')
     return frame.iloc[:,-2].sum(axis = 0, skipna = True) - (frame.iloc[:,-3].sum(axis = 0, skipna = True))
 
+def get_recovery_diff():
+    frame = pd.read_csv('recovered.csv')
+    return frame.iloc[:,-2].sum(axis = 0, skipna = True) - (frame.iloc[:,-3].sum(axis = 0, skipna = True))
+
 def get_total(frame):
     return frame.iloc[:,-2].sum(axis = 0, skipna = True)
 

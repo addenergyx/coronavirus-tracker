@@ -7,7 +7,7 @@ Created on Thu Mar 12 19:39:52 2020
 from server import server
 import os
 from navbar import NationsDropdown, CasesDropdown, Navbar
-from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff
+from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff
 import dash_daq as daq
 
 import datetime
@@ -180,9 +180,9 @@ recovered_card = [
     dbc.CardBody(
         [
             html.H2(id="reco", className="card-title", style={'textAlign':'center'}),
-            #html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
-            html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'10px', #'padding-bottom':'8px'
-                                                                                                                              }),
+            html.P("+{} in the last 24hrs".format(get_recovery_diff()),className="card-text", style={'textAlign':'center'}),
+            #html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'10px', #'padding-bottom':'8px'
+                                                                                                                              #}),
         ]
     ),
 ]
@@ -294,12 +294,12 @@ body = html.Div([
     html.Div([
         dcc.Slider(
             id='time-frame',
-            min = getTimeScaleUnix()[0],
-            max = getTimeScaleUnix()[-1],
+            # min = getTimeScaleUnix()[0],
+            # max = getTimeScaleUnix()[-1],
             value = getTimeScaleUnix()[-1],
-            #updatemode='drag',
-            #tooltip = { 'always_visible': True },
-            marks=getMarks(),
+            # #updatemode='drag',
+            # #tooltip = { 'always_visible': True },
+            # marks=getMarks(12),
             step=1,
             ),
         dcc.Interval(id='data-interval-component',
@@ -481,7 +481,7 @@ app.layout = Homepage()
     [Input("data-interval-component", "n_intervals")])
 def update_slider(n): 
     print("slide frank ocean")
-    return getTimeScaleUnix()[0], getTimeScaleUnix()[-1], getMarks()
+    return getTimeScaleUnix()[0], getTimeScaleUnix()[-1], getMarks(6)
 
 ### Animate map using method above
     '''
@@ -493,8 +493,8 @@ def update_slider(n):
 def update_data(n):
    
     ts_confirmed, ts_death = get_jhu_dataset()
-    ts_recovered = pd.read_csv('recovered.csv')
-    #ts_recovered = get_recovery_dataset() 
+    #ts_recovered = pd.read_csv('recovered.csv')
+    ts_recovered = get_recovery_dataset() 
 
     clean_data(ts_confirmed)
     clean_data(ts_death)
@@ -524,13 +524,13 @@ def update_progress(n):
                Output('con','children'),
                Output('dea','children'),],
               [Input('recovery-interval-component','n_intervals')])
-def update_recovery(n):
+def update_cards(n):
     
     ## Randomise scraping site times
     global interval_state
     interval_state = randint(60000, 180000)
     
-    return "*"+"{:,d}".format(pull_total('Recovered:\s*(\d+.\d+)')), "{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.\d+)'))), "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
+    return "{:,d}".format(pull_total('Recovered:\s*(\d+.\d+)')), "{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.\d+)'))), "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
 # @app.callback(Output('con','children'), [Input('recovery-interval-component','n_intervals')])
 # def update_confirmed(n):
@@ -743,9 +743,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
-    #app.run_server()
+# if __name__ == '__main__':
+#     app.run_server(debug=True, use_reloader=False)
+#     #app.run_server()
 
 
 
