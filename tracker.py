@@ -303,7 +303,7 @@ body = html.Div([
             step=1,
             ),
         dcc.Interval(id='data-interval-component',
-            interval=3600000,
+            interval=3600000*3,
             n_intervals=0,
             )
     ]),
@@ -509,7 +509,7 @@ def update_confirmed(n):
 def update_deaths(n):    
     return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
-@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value'), Input("data-interval-component", "n_intervals")])
+@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
 def update_graph(unix_date, n):    
     
     ts_recovered = pd.read_csv('recovered.csv')
@@ -532,7 +532,6 @@ def update_graph(unix_date, n):
             break
     
     #listy.insert(0,'City/Country')
-    print('update timelines')
     #for individual countries    
     # filtered_ts_confirmed = ts_confirmed[listy]
     # filtered_ts_death = ts_death[listy]
