@@ -8,6 +8,7 @@ from server import server
 import os
 from navbar import NationsDropdown, CasesDropdown, Navbar
 from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff
+import dash_daq as daq
 
 import datetime
 
@@ -191,8 +192,6 @@ mortality_card = [
     dbc.CardBody(
         [
             html.H2('{0:.2f}%'.format((get_deaths_diff() / get_cases_diff())*100), className="card-title card-style"),
-            #html.P("+{} in the last 24hrs".format(total_recovered-old_total_recovered),className="card-text", style={'textAlign':'center'}),
-            html.Br(),
         ]
     ),
 ]
@@ -202,8 +201,6 @@ affected_card = [
     dbc.CardBody(
         [
             html.H2(get_num_countries_affected(), className="card-title card-style"),
-            #html.Br(),
-            #html.P("   ",className="card-text"),
         ]
     ),
 ]
@@ -334,10 +331,16 @@ body = html.Div([
     ]),
     
     html.Div([
-        dcc.Checklist(id='exclude-china', 
-                       options=[{'label':'Include China','value':1}],
-                       value=[1],
-                       labelStyle=dict(color='white'))    
+        daq.ToggleSwitch(
+            id='exclude-china',
+            value=True,
+            label=['Excluding China', 'Including China'],
+            color='#0275d8',
+            style={
+                'color': 'white',
+                'width':'350px'
+            }
+        ),
     ]),
     
     html.Div([
@@ -462,8 +465,8 @@ app.layout = Homepage()
 def update_data(n):
    
     ts_confirmed, ts_death = get_jhu_dataset()
-    #ts_recovered = pd.read_csv('recovered.csv')
-    ts_recovered = get_recovery_dataset() 
+    ts_recovered = pd.read_csv('recovered.csv')
+    #ts_recovered = get_recovery_dataset() 
 
     clean_data(ts_confirmed)
     clean_data(ts_death)
@@ -472,10 +475,6 @@ def update_data(n):
     ts_confirmed.to_csv('confirmed.csv', index=False)
     ts_death.to_csv('deaths.csv', index=False)
     ts_recovered.to_csv('recovered.csv', index=False)
-    
-    # clean_data(ts_confirmed)
-    # clean_data(ts_death)
-    # clean_data(ts_recovered)
     
     print("All Data Updated")
     
@@ -510,7 +509,7 @@ def update_confirmed(n):
 def update_deaths(n):    
     return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
-@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
+@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value'), Input("data-interval-component", "n_intervals")])
 def update_graph(unix_date):    
     
     ts_recovered = pd.read_csv('recovered.csv')
@@ -533,7 +532,7 @@ def update_graph(unix_date):
             break
     
     #listy.insert(0,'City/Country')
-    
+    print('update timelines')
     #for individual countries    
     # filtered_ts_confirmed = ts_confirmed[listy]
     # filtered_ts_death = ts_death[listy]
@@ -696,6 +695,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
         height=750,
         #width=1500,
         hovermode='closest',
+        legend=dict(
+            font={'color':colors['background']},
+            ),
         mapbox=dict(
             accesstoken=mapbox_access_token,
             bearing=0,
@@ -706,7 +708,7 @@ def update_map(selected_nation, selected_case, click, unix_date):
             # ),
             pitch=0,
             zoom=zoom
-        ),
+            ),
     )
        
     return fig

@@ -100,6 +100,10 @@ def getTimeScale():
     return pd.read_csv('confirmed.csv').columns[4:-1]
 
 def getTimeScaleUnix():
+    '''
+    Dash does not support datetime objects by default.
+    You can solve this issue by converting your datetime object into an unix timestamp.
+    '''
     return [int(time.mktime(datetime.datetime.strptime(x, "%m/%d/%y").timetuple())) for x in getTimeScale()]
 
 def getMarks(Nth=4):
