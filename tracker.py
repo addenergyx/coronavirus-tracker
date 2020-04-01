@@ -294,12 +294,12 @@ body = html.Div([
     html.Div([
         dcc.Slider(
             id='time-frame',
-            # min = getTimeScaleUnix()[0],
-            # max = getTimeScaleUnix()[-1],
+            min = getTimeScaleUnix()[0],
+            max = getTimeScaleUnix()[-1],
             value = getTimeScaleUnix()[-1],
             # #updatemode='drag',
             # #tooltip = { 'always_visible': True },
-            # marks=getMarks(12),
+            marks=getMarks(6),
             step=1,
             ),
         dcc.Interval(id='data-interval-component',
