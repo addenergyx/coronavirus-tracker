@@ -31,11 +31,11 @@ from dash.dependencies import Input, Output, State
 
 import dash_table
 
-interval_state = 100000
+interval_state = 60000
 url = 'https://www.worldometers.info/coronavirus/'
 
 # number of seconds between re-calculating the data                                                                                                                           
-UPDATE_INTERVAL = 3600
+# UPDATE_INTERVAL = 3600
 
 def get_new_data():
     
@@ -461,12 +461,40 @@ app.layout = Homepage()
 # executor = ThreadPoolExecutor(max_workers=1)
 # executor.submit(get_new_data_every)
 
+# @app.callback(Output('time-frame','min'),
+#               [Input("data-interval-component", "n_intervals")])
+# def update_slider_example_min(input):   
+#     min_value = min(df_data_FW[input])
+#     return min_value
+
+# @app.callback(Output('time-frame','max'),
+#               [Input("data-interval-component", "n_intervals")])
+# def update_slider_example_max(input):
+#     max_value = max(df_data_FW[input])
+#     return max_value
+
+@app.callback(
+    [#Output('time-frame','value'),
+     Output('time-frame','min'),
+     Output('time-frame','max'),
+     Output('time-frame','marks'),],
+    [Input("data-interval-component", "n_intervals")])
+def update_slider(n): 
+    print("slide frank ocean")
+    return getTimeScaleUnix()[0], getTimeScaleUnix()[-1], getMarks()
+
+### Animate map using method above
+    '''
+    on button click
+    input nintervals every second slider goes up one therefore change map
+    '''
+
 @app.callback(Output("recovery-intermediate-value", "children"),[Input("data-interval-component", "n_intervals")])
 def update_data(n):
    
     ts_confirmed, ts_death = get_jhu_dataset()
-    #ts_recovered = pd.read_csv('recovered.csv')
-    ts_recovered = get_recovery_dataset() 
+    ts_recovered = pd.read_csv('recovered.csv')
+    #ts_recovered = get_recovery_dataset() 
 
     clean_data(ts_confirmed)
     clean_data(ts_death)
@@ -496,8 +524,8 @@ def update_progress(n):
 def update_recovery(n):
     
     ## Randomise scraping site times
-    global interval_state
-    interval_state = randint(60000, 180000)
+    # global interval_state
+    # interval_state = randint(60000, 180000)
     
     return "*"+"{:,d}".format(pull_total('Recovered:\s*(\d+.\d+)'))
 
@@ -510,7 +538,7 @@ def update_deaths(n):
     return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
-def update_graph(unix_date, n):    
+def update_graph(unix_date):    
     
     ts_recovered = pd.read_csv('recovered.csv')
     ts_confirmed = pd.read_csv('confirmed.csv')
