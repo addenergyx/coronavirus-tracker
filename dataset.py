@@ -169,7 +169,6 @@ def get_recovery_dataset():
         
     recovery_row_list = []
     
-    
     geolocator = Nominatim(timeout=1000 , user_agent="http://www.coronavirustracker.co.uk/tracker/")
     
     print("Updating Recovery Data")
