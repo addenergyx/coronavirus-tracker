@@ -191,7 +191,7 @@ mortality_card = [
     dbc.CardHeader("Global Mortality Rate", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2('{0:.2f}%'.format((get_deaths_diff() / get_cases_diff())*100), className="card-title card-style"),
+            html.H2('{0:.2f}%'.format((int(pull_total('Deaths:\s*(\d+.\d+)')) / int(pull_total('Coronavirus Cases:\s*(\d+.\d+)')))*100), className="card-title card-style"),
         ]
     ),
 ]
@@ -520,22 +520,25 @@ def update_progress(n):
     return progress, f"{progress} %"
 
 ## Using multi output slowed down dash considerably
-@app.callback(Output('reco','children'),[Input('recovery-interval-component','n_intervals')])
+@app.callback([Output('reco','children'),
+               Output('con','children'),
+               Output('dea','children'),],
+              [Input('recovery-interval-component','n_intervals')])
 def update_recovery(n):
     
     ## Randomise scraping site times
-    # global interval_state
-    # interval_state = randint(60000, 180000)
+    global interval_state
+    interval_state = randint(60000, 180000)
     
-    return "*"+"{:,d}".format(pull_total('Recovered:\s*(\d+.\d+)'))
+    return "*"+"{:,d}".format(pull_total('Recovered:\s*(\d+.\d+)')), "{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.\d+)'))), "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
-@app.callback(Output('con','children'), [Input('recovery-interval-component','n_intervals')])
-def update_confirmed(n):
-    return "{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.\d+)')))
+# @app.callback(Output('con','children'), [Input('recovery-interval-component','n_intervals')])
+# def update_confirmed(n):
+#     return "{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.\d+)')))
 
-@app.callback(Output('dea','children'), [Input('recovery-interval-component','n_intervals')])
-def update_deaths(n):    
-    return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
+# @app.callback(Output('dea','children'), [Input('recovery-interval-component','n_intervals')])
+# def update_deaths(n):    
+#     return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
 def update_graph(unix_date):    
