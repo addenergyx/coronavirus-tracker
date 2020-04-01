@@ -126,6 +126,7 @@ app.index_string = '''
     <head>
         {%metas%}
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146361977-3"></script>
+        
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -133,7 +134,13 @@ app.index_string = '''
         
           gtag('config', 'UA-146361977-3');
         </script>
+        
+        <script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=5e849281c43e3f0019117eac&cms=website' async='async'></script>
+        
+        <script async src="https://platform-api.sharethis.com/js/sharethis.js#property=5e849281c43e3f0019117eac&product=sticky-share-buttons"></script>
+        
         <script data-ad-client="ca-pub-7702690633531029" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        
         <script data-name="BMC-Widget" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="addenergyx" data-description="Support me on Buy me a coffee!" 
         data-message="Thank you for visiting. Please support this project" data-color="#FF813F" data-position="right" data-x_margin="18" data-y_margin="18"></script>
         {%css%}
@@ -743,9 +750,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True, use_reloader=False)
-#     #app.run_server()
+if __name__ == '__main__':
+    app.run_server(debug=True, use_reloader=False)
+    #app.run_server()
 
 
 
