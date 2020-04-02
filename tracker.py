@@ -10,14 +10,12 @@ from navbar import NationsDropdown, CasesDropdown, Navbar
 from dataset import get_jhu_dataset, getMarks, clean_data, unix_to_date, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff, get_data_from_postgres
 import dash_daq as daq
 
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-
 import datetime
 
 import requests as req
 import re
 import pandas as pd
+
 # generate random integer values
 from random import randint
 

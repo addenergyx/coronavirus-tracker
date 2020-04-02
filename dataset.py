@@ -15,8 +15,6 @@ import os
 import numpy as np
 import requests
 from geopy.geocoders import Nominatim, GoogleV3
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from sqlalchemy import create_engine
 
 
