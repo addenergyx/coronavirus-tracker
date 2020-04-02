@@ -5,17 +5,14 @@ Created on Thu Apr  2 10:38:54 2020
 @author: david
 """
 
-from dataset import get_jhu_dataset, clean_data, get_recovery_dataset
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import pandas as pd
+from dataset import get_jhu_dataset, get_recovery_dataset
 
 import os
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 
 db_URI = os.getenv('DATABASE_URL')
+
 engine = create_engine(db_URI)
 
 # def iter_pd(df):
@@ -45,8 +42,8 @@ engine = create_engine(db_URI)
 # client = gspread.authorize(creds)
 
 ts_confirmed, ts_death = get_jhu_dataset()
-ts_recovered = get_recovery_dataset() 
-#ts_recovered = pd.read_csv('recovered.csv')
+#ts_recovered = get_recovery_dataset() 
+ts_recovered = pd.read_csv('recovered.csv')
 
 # clean_data(ts_confirmed)
 # clean_data(ts_death)

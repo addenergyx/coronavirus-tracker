@@ -17,6 +17,8 @@ import requests
 from geopy.geocoders import Nominatim, GoogleV3
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from sqlalchemy import create_engine
+
 
 ## Date column names
 def getList(dict): 
@@ -69,9 +71,8 @@ def get_jhu_dataset():
     clean_data(confirmed_df)
     clean_data(deaths_df)
 
-    
-    confirmed_df.to_csv('confirmed.csv', index=False)
-    deaths_df.to_csv('deaths.csv', index=False)
+    # confirmed_df.to_csv('confirmed.csv', index=False)
+    # deaths_df.to_csv('deaths.csv', index=False)
 
     return confirmed_df, deaths_df
 
@@ -99,7 +100,7 @@ def get_recovery_frame(confirmed, death):
     return ts_recovered
 
 def getTimeScale():
-    return get_data_from_sheets()[0].columns[4:-1]
+    return get_data_from_postgres()[0].columns[4:-1]
 
 def getTimeScaleUnix():
     '''
@@ -199,29 +200,36 @@ def get_recovery_dataset():
     
     clean_data(recovery)
        
-    recovery.to_csv('recovered.csv', index=False)
+    #recovery.to_csv('recovered.csv', index=False)
     
     return recovery
 
 
 
-def get_data_from_sheets():
+def get_data_from_postgres():
     
     ### Google Sheets
-    scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
+    # scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
     
-    creds = ServiceAccountCredentials.from_json_keyfile_name("google-credentials.json", scope)
+    # creds = ServiceAccountCredentials.from_json_keyfile_name("google-credentials.json", scope)
     
-    client = gspread.authorize(creds)
+    # client = gspread.authorize(creds)
 
-    #Google sheets
-    confirmed_sheet = client.open("confirmed").sheet1
-    recovered_sheet = client.open("recovered").sheet1
-    death_sheet = client.open("deaths").sheet1
+    # #Google sheets
+    # confirmed_sheet = client.open("confirmed").sheet1
+    # recovered_sheet = client.open("recovered").sheet1
+    # death_sheet = client.open("deaths").sheet1
     
-    ts_recovered = pd.DataFrame(recovered_sheet.get_all_records())
-    ts_death = pd.DataFrame(death_sheet.get_all_records())
-    ts_confirmed = pd.DataFrame(death_sheet.get_all_records())
+    # ts_recovered = pd.DataFrame(recovered_sheet.get_all_records())
+    # ts_death = pd.DataFrame(death_sheet.get_all_records())
+    # ts_confirmed = pd.DataFrame(confirmed_sheet.get_all_records())
+        
+    db_URI = os.getenv('DATABASE_URL')
+    engine = create_engine(db_URI)
+    
+    ts_confirmed = pd.read_sql_table("confirmed", con=engine, index_col='index')
+    ts_recovered = pd.read_sql_table("recovered", con=engine, index_col='index')
+    ts_death = pd.read_sql_table("deaths", con=engine, index_col='index')
     
     return ts_confirmed, ts_death, ts_recovered
 
