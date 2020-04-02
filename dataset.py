@@ -5,7 +5,7 @@ Created on Wed Mar 25 13:26:07 2020
 @author: david
 """
 
-## Rebuilding JHU Dataset from api request
+## Rebuilding JHU Dataset from api requests
 
 import datetime
 import time
@@ -15,6 +15,8 @@ import os
 import numpy as np
 import requests
 from geopy.geocoders import Nominatim, GoogleV3
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 ## Date column names
 def getList(dict): 
@@ -97,7 +99,7 @@ def get_recovery_frame(confirmed, death):
     return ts_recovered
 
 def getTimeScale():
-    return pd.read_csv('confirmed.csv').columns[4:-1]
+    return get_data_from_sheets()[0].columns[4:-1]
 
 def getTimeScaleUnix():
     '''
@@ -200,5 +202,56 @@ def get_recovery_dataset():
     recovery.to_csv('recovered.csv', index=False)
     
     return recovery
+
+
+
+def get_data_from_sheets():
+    
+    ### Google Sheets
+    scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
+    
+    creds = ServiceAccountCredentials.from_json_keyfile_name("google-credentials.json", scope)
+    
+    client = gspread.authorize(creds)
+
+    #Google sheets
+    confirmed_sheet = client.open("confirmed").sheet1
+    recovered_sheet = client.open("recovered").sheet1
+    death_sheet = client.open("deaths").sheet1
+    
+    ts_recovered = pd.DataFrame(recovered_sheet.get_all_records())
+    ts_death = pd.DataFrame(death_sheet.get_all_records())
+    ts_confirmed = pd.DataFrame(death_sheet.get_all_records())
+    
+    return ts_confirmed, ts_death, ts_recovered
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

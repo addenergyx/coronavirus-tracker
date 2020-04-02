@@ -7,8 +7,11 @@ Created on Thu Mar 12 19:39:52 2020
 from server import server
 import os
 from navbar import NationsDropdown, CasesDropdown, Navbar
-from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff
+from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff, get_data_from_sheets
 import dash_daq as daq
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 import datetime
 
@@ -349,7 +352,7 @@ body = html.Div([
     html.Div([
         dbc.Row(
             [
-                dbc.Col([NationsDropdown(pd.read_csv('confirmed.csv'))]),
+                dbc.Col([NationsDropdown(get_data_from_sheets()[0])]),
                 dbc.Col([CasesDropdown()]),
             ]
         )
@@ -501,9 +504,12 @@ app.layout = Homepage()
 @app.callback(Output("pie-chart", "figure"),[Input('time-frame','value')])
 def update_pie(unix_date):
     
-    ts_recovered = pd.read_csv('recovered.csv')
-    ts_death = pd.read_csv('deaths.csv')
-    ts_confirmed = pd.read_csv('confirmed.csv')
+    
+    ts_confirmed, ts_death, ts_recovered = get_data_from_sheets()
+    
+    # ts_recovered = pd.read_csv('recovered.csv')
+    # ts_death = pd.read_csv('deaths.csv')
+    # ts_confirmed = pd.read_csv('confirmed.csv')
 
     #unix_date=1585440000
     
@@ -609,9 +615,7 @@ def update_cards(n):
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
 def update_graph(unix_date):    
     
-    ts_recovered = pd.read_csv('recovered.csv')
-    ts_confirmed = pd.read_csv('confirmed.csv')
-    ts_death = pd.read_csv('deaths.csv')
+    ts_confirmed, ts_death, ts_recovered = get_data_from_sheets()
     
     #unix_date=1585440000
     
@@ -714,9 +718,7 @@ def update_map(selected_nation, selected_case, click, unix_date):
     #unix_date=1585008000
     #selected_nation=['Worldwide']
     
-    ts_confirmed = pd.read_csv('confirmed.csv')
-    ts_death = pd.read_csv('deaths.csv')    
-    ts_recovered = pd.read_csv('recovered.csv')
+    ts_confirmed, ts_death, ts_recovered = get_data_from_sheets()
     
     date = unix_to_date(unix_date)
     #date='3/25/20'
