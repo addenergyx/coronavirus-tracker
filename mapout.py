@@ -115,6 +115,11 @@ app.index_string = '''
     <head>
         {%metas%}
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146361977-3"></script>
+        
+        <script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=5e849281c43e3f0019117eac&product=inline-share-buttons' async='async'></script>
+        
+        <script async src="https://platform-api.sharethis.com/js/sharethis.js#property=5e849281c43e3f0019117eac&product=sticky-share-buttons"></script>
+        
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
