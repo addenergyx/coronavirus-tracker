@@ -315,10 +315,8 @@ body = html.Div([
             n_intervals=0,
             )
     ]),
-    
-    #html.Div(id='data'),
-    
-    html.Div(modal),
+        
+    #html.Div(modal),
     
     ## CHARTS ROW
     html.Div([
@@ -560,19 +558,19 @@ def update_slider(n):
 @app.callback(Output("recovery-intermediate-value", "children"),[Input("data-interval-component", "n_intervals")])
 def update_data(n):
    
-    ts_confirmed, ts_death = get_jhu_dataset()
-    #ts_recovered = pd.read_csv('recovered.csv')
-    ts_recovered = get_recovery_dataset() 
+    # ts_confirmed, ts_death = get_jhu_dataset()
+    # ts_recovered = pd.read_csv('recovered.csv')
+    # #ts_recovered = get_recovery_dataset() 
 
-    clean_data(ts_confirmed)
-    clean_data(ts_death)
-    clean_data(ts_recovered)
+    # clean_data(ts_confirmed)
+    # clean_data(ts_death)
+    # clean_data(ts_recovered)
 
-    ts_confirmed.to_csv('confirmed.csv', index=False)
-    ts_death.to_csv('deaths.csv', index=False)
-    ts_recovered.to_csv('recovered.csv', index=False)
+    # ts_confirmed.to_csv('confirmed.csv', index=False)
+    # ts_death.to_csv('deaths.csv', index=False)
+    # ts_recovered.to_csv('recovered.csv', index=False)
     
-    print("All Data Updated")
+    # print("All Data Updated")
     
     return "Data Updated"
 
@@ -809,9 +807,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True, use_reloader=False)
-#     #app.run_server()
+if __name__ == '__main__':
+    app.run_server(debug=True, use_reloader=False)
+    #app.run_server()
 
 
 

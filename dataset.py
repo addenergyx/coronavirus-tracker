@@ -176,12 +176,12 @@ def get_recovery_dataset():
         
         geolocator = GoogleV3(api_key=os.getenv('MAPS_API_KEY') , user_agent="http://www.coronavirustracker.co.uk/tracker/") #Google is faster but breaks
         location = geolocator.geocode(country)
-        # print(location)
+        print(location)
 
         if location is None:
             geolocator = Nominatim(timeout=1000 , user_agent="http://www.coronavirustracker.co.uk/tracker/") #Google can't find ms zaandam
             location = geolocator.geocode(country)
-            #print(f"Nominatim - {location}")
+            print(f"Nominatim - {location}")
 
         # print(location.latitude)
         # print(location.longitude)
