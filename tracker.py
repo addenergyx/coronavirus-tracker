@@ -7,7 +7,7 @@ Created on Thu Mar 12 19:39:52 2020
 from server import server
 import os
 from navbar import NationsDropdown, CasesDropdown, Navbar
-from dataset import get_jhu_dataset, getMarks, clean_data, get_total, get_previous_total, unix_to_date, get_recovery_dataset, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff, get_data_from_sheets
+from dataset import get_jhu_dataset, getMarks, clean_data, unix_to_date, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff, get_data_from_postgres
 import dash_daq as daq
 
 import gspread
@@ -202,7 +202,7 @@ mortality_card = [
     dbc.CardHeader("Global Mortality Rate", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2('{0:.2f}%'.format((int(pull_total('Deaths:\s*(\d+.\d+)')) / int(pull_total('Coronavirus Cases:\s*(\d+.\d+)')))*100), className="card-title card-style"),
+            html.H2('{0:.2f}%'.format((int(pull_total('Deaths:\s*(\d+.*\d+)')) / int(pull_total('Coronavirus Cases:\s*(\d+.*\d+)')))*100), className="card-title card-style"),
         ]
     ),
 ]
@@ -313,12 +313,13 @@ body = html.Div([
             marks=getMarks(6),
             step=1,
             ),
-        dcc.Interval(id='data-interval-component',
-            interval=3600000*3,
-            n_intervals=0,
-            )
+
     ]),
-        
+    
+    dcc.Interval(id='data-interval-component',
+        interval=3600000*3,
+        n_intervals=0,
+    ),
     #html.Div(modal),
     
     ## CHARTS ROW
@@ -333,7 +334,7 @@ body = html.Div([
                         #html.P('Cases Distribution', style={'color':colors['text'], 'textAlign':'left'}),
                         dcc.Graph(id='pie-chart',)
                     ]
-                ), width=3),          
+                ), width=12,lg=3),          
             
             ## LINE GRAPH
             dbc.Col(
@@ -341,7 +342,7 @@ body = html.Div([
                     [
                         dcc.Graph(id='time-series-confirmed'),
                     ]
-                ),width=9),
+                ),width=12, lg=9),
              
             ]
         )
@@ -352,7 +353,7 @@ body = html.Div([
     html.Div([
         dbc.Row(
             [
-                dbc.Col([NationsDropdown(get_data_from_sheets()[0])]),
+                dbc.Col([NationsDropdown(get_data_from_postgres()[0])]),
                 dbc.Col([CasesDropdown()]),
             ]
         )
@@ -505,7 +506,7 @@ app.layout = Homepage()
 def update_pie(unix_date):
     
     
-    ts_confirmed, ts_death, ts_recovered = get_data_from_sheets()
+    ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
     
     # ts_recovered = pd.read_csv('recovered.csv')
     # ts_death = pd.read_csv('deaths.csv')
@@ -556,10 +557,10 @@ def update_slider(n):
     return getTimeScaleUnix()[0], getTimeScaleUnix()[-1], getMarks(6)
 
 ### Animate map using method above
-    '''
-    on button click
-    input nintervals every second slider goes up one therefore change map
-    '''
+'''
+on button click
+input nintervals every second slider goes up one therefore change map
+'''
 
 @app.callback(Output("recovery-intermediate-value", "children"),[Input("data-interval-component", "n_intervals")])
 def update_data(n):
@@ -587,7 +588,7 @@ def update_data(n):
 def update_progress(n):
     # check progress of some background process, in this example we'll just
     # use n_intervals constrained to be in 0-100
-    progress = int(pull_total('Recovered:\s*(\d+.\d+)') / (pull_total('Coronavirus Cases:\s*(\d+.\d+)') - pull_total('Deaths:\s*(\d+.\d+)')) *100)
+    progress = int(pull_total('Recovered:\s*(\d+.*\d+)') / (pull_total('Coronavirus Cases:\s*(\d+.*\d+)') - pull_total('Deaths:\s*(\d+.*\d+)')) *100)
     # only add text after 5% progress to ensure text isn't squashed too much
     return progress, f"{progress} %"
 
@@ -602,7 +603,7 @@ def update_cards(n):
     global interval_state
     interval_state = randint(60000, 180000)
     
-    return "{:,d}".format(pull_total('Recovered:\s*(\d+.\d+)')), "{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.\d+)'))), "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
+    return "{:,d}".format(pull_total('Recovered:\s*(\d+.*\d+)')), "{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.*\d+)'))), "{:,d}".format(int(pull_total('Deaths:\s*(\d+.*\d+)')))
 
 # @app.callback(Output('con','children'), [Input('recovery-interval-component','n_intervals')])
 # def update_confirmed(n):
@@ -615,7 +616,7 @@ def update_cards(n):
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
 def update_graph(unix_date):    
     
-    ts_confirmed, ts_death, ts_recovered = get_data_from_sheets()
+    ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
     
     #unix_date=1585440000
     
@@ -718,7 +719,7 @@ def update_map(selected_nation, selected_case, click, unix_date):
     #unix_date=1585008000
     #selected_nation=['Worldwide']
     
-    ts_confirmed, ts_death, ts_recovered = get_data_from_sheets()
+    ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
     
     date = unix_to_date(unix_date)
     #date='3/25/20'
