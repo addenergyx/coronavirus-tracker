@@ -15,17 +15,80 @@ import dateutil.parser as dparser
 # Initialises flask application
 server = Flask(__name__, static_folder='assets')
 
+countries_code = {
+    'Global':None,
+    'Argentina':'ar',
+    'Australia':'au',
+    'Austria':'at',
+    'Belgium':'be',
+    'Brazil':'br',
+    'Bulgaria':'bg',
+    'Canada':'ca',
+    'China':'cn',
+    'Colombia':'co',
+    'Cuba':'cu',
+    'Czech Republic':'cz',
+    'Egypt':'eg',
+    'France':'fr',
+    'Germany':'de',
+    'Greece':'gr',
+    'Hong Kong':'hk',
+    'Hungary':'hu',
+    'India':'in',
+    'Indonesia':'id',
+    'Ireland':'ie',
+    'Israel':'il',
+    'Italy':'it',
+    'Japan':'jp',
+    'Latvia':'iv',
+    'Lithuania':'lt',
+    'Malaysia':'my',
+    'Mexico':'mx',
+    'Morocco':'ma',
+    'Netherlands':'nl',
+    'New Zealand':'nz',
+    'Nigeria':'ng',
+    'Norway':'no',
+    'Philippines':'ph',
+    'Poland':'pl',
+    'Portugal':'pt',
+    'Romania':'ro',
+    'Russia':'ru',
+    'Saudi Arabia':'sa',
+    'Serbia':'rs',
+    'Singapore':'sg',
+    'Slovakia':'sk',
+    'Slovenia':'si',
+    'South Africa':'za',
+    'South Korea':'kr',
+    'Sweden':'se',
+    'Switzerland':'ch',
+    'Taiwan':'tw',
+    'Thailand':'th',
+    'Turkey':'tr',
+    'UAE':'ae',
+    'Ukraine':'ua',
+    'United Kingdom':'gb',
+    'United States':'us',
+    'Venuzuela':'ve',
+}
+
+
 def get_year():
     return datetime.now().year
 
-def update_news():
+
+
+def update_news(country):  
     # Init
     newsapi = NewsApiClient(api_key=os.getenv('NEWS_API_KEY'))
     
     # /v2/top-headlines
     top_headlines = newsapi.get_top_headlines(q='Coronavirus',
                                               #sources='google-news',
-                                              language='en')
+                                              country=countries_code.get(country),
+                                              language='en'
+                                              )
     
     articles = top_headlines['articles']
     
@@ -69,9 +132,15 @@ def about():
 def ads_txt():
     return server.send_static_file("ads.txt")
 
-@server.route('/news')
+@server.route('/news', methods=['GET', 'POST'])
 def news():
-    return render_template('news.html', newsa=update_news())
+
+    if request.method == 'POST':
+        country = request.form["countrys"]
+        return render_template('news.html', newsa=update_news(country), countries=list(countries_code.keys()), selected_country=country)
+
+    country = 'Global'
+    return render_template('news.html', newsa=update_news(country), countries=list(countries_code.keys()), selected_country=country)
 
 @server.route("/sitemap")
 @server.route("/sitemap/")
@@ -100,7 +169,7 @@ def sitemap():
     response.headers["Content-Type"] = "application/xml"
 
     return response
-        
+   
 # @server.route("/sitemap.xml")
 # def sitemap():
 #     return render_template("sitemap.xml")

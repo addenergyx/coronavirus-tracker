@@ -1,12 +1,3 @@
-/*only use with viewport
-html,body {
-    width: 100%;
-    height: 100%;
-    margin: 0px;
-    padding: 0px;
-    overflow-x: hidden;
-}
-*/
 .splash {
   height: 50vh;
   min-height: 50vh;
@@ -54,3 +45,32 @@ html,body {
     font-size: 12px;
     line-height: 1.42857;
 }
+
+.a.links {
+    color: 343332;
+}
+
+.a.links:hover {
+    color: 0665CA;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

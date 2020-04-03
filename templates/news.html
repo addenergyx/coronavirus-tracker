@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="assets/css/smoothproducts.css">
     <link rel="stylesheet" href="assets/css/untitled.css">
     <link rel="stylesheet" href="assets/css/Video-Parallax-Background-v2.css">
+
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146361977-3"></script>
 <script>
@@ -40,12 +41,14 @@
   gtag('config', 'UA-146361977-3');
 </script>
 
+<!--
 <script type="text/javascript">
 var _iub = _iub || [];
 _iub.csConfiguration = {"lang":"en","askConsentIfCMPNotFound":false,"siteId":1823736,"countryDetection":true,"cookiePolicyId":27564713,"enableCMP":true, "banner":{ "acceptButtonDisplay":true,"customizeButtonDisplay":true,"position":"float-top-center" }};
 </script>
 <script type="text/javascript" src="//cdn.iubenda.com/cs/tcf/stub.js"></script>
 <script type="text/javascript" src="//cdn.iubenda.com/cs/iubenda_cs.js" charset="UTF-8" async></script>
+-->
 
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -93,7 +96,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <h2 class="text-info">Latest News</h2>
                     <p>Comprehensive up-to-date news coverage on COVID-19, aggregated from sources all over the world by <a href="https://newsapi.org/"><strong>NEWS API</strong></a><br></p>
                 </div>
-                <div class="block-content">                   
+                
+                <div class="form-group">
+                    <form id="countries" name="countries" method="post" action="{{ url_for('news') }}">
+                        <select name="countrys" id="countrys" onchange="this.form.submit()">
+                            {% for country in countries %}
+                                {% if selected_country == country %}
+                                    <option value= "{{country}}" selected>{{country}}</option>
+                                {% else %}
+                                    <option value= "{{country}}">{{country}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                
+                <div class="block-content">
+                   
+                    {% if newsa.empty %}
+                        <p style="align-content: center; text-align: center"> Sorry there is currently no news available for {{selected_country}}.&nbsp;Please try again later</p>
+                    {% endif %}
+                    
                     {% for key,value in newsa.iterrows() %}
                     <div class="clean-blog-post">
                         <div class="row news-tile" onclick="window.open('{{ value['Url'] }}','mywindow');">
