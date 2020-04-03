@@ -190,8 +190,6 @@ recovered_card = [
         [
             html.H2(id="reco", className="card-title", style={'textAlign':'center'}),
             html.P("+{} in the last 24hrs".format(get_recovery_diff()),className="card-text", style={'textAlign':'center'}),
-            #html.P("*JHU has stopped reporting recovered cases due to no reliable data sources",className="card-text", style={'textAlign':'center', 'font-size':'10px', #'padding-bottom':'8px'
-                                                                                                                              #}),
         ]
     ),
 ]
@@ -431,9 +429,7 @@ body = html.Div([
           html.Div(
             className='col',
             children=[
-              html.P(
-                'Data source:',style={'color': colors['text']}
-              ),
+              html.P(['Data source ', html.Span(className="fa fa-pie-chart")],style={'color': colors['text']}, ),
               html.A(
                   'Johns Hopkins CSSE',
                   href='https://github.com/CSSEGISandData/COVID-19'
@@ -460,7 +456,14 @@ body = html.Div([
               ),
               html.A(
                   'Dash / Plot.ly',
-                  href='https://plot.ly/dash/'
+                  href='https://plot.ly/dash/', 
+                  className=" a links",
+              ),
+              html.Br(),
+              html.A(
+                  'News API',
+                  href='https://newsapi.org/',
+                  className="a links",
               )                    
             ]
           ),                                                         
@@ -808,9 +811,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
-    #app.run_server()
+# if __name__ == '__main__':
+#     app.run_server(debug=True, use_reloader=False)
+#     #app.run_server()
 
 
 
