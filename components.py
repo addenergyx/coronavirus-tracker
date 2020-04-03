@@ -26,6 +26,7 @@ def Navbar():
         color='default',
         #sticky="top",
         fluid=True,
+        #style={'background':'FFFFFF'}
         #className=" bg-transparent",
     )
     return navbar

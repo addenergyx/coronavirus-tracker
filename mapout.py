@@ -13,7 +13,7 @@ import pandas as pd
 import dash_daq as daq
 from dash.dependencies import Input, Output
 import numpy as np
-from navbar import NationsDropdown, CasesDropdown, Navbar
+from components import NationsDropdown, CasesDropdown, Navbar
 from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, unix_to_date, getTimeScaleUnix, getTimeScale
 
 import plotly.express as px
