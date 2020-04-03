@@ -43,7 +43,6 @@ engine = create_engine(db_URI)
 
 ts_confirmed, ts_death = get_jhu_dataset()
 ts_recovered = get_recovery_dataset() 
-#ts_recovered = pd.read_csv('recovered.csv')
 
 # clean_data(ts_confirmed)
 # clean_data(ts_death)
