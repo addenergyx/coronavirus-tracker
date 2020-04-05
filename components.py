@@ -7,6 +7,13 @@ Created on Mon Mar 23 18:16:34 2020
 
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
+import dash_html_components as html
+
+colors = {
+    'background': '#191A1A',
+    'text': '#FFFFFF'
+}
+
 
 def Navbar():
     navbar = dbc.NavbarSimple( 
@@ -24,9 +31,9 @@ def Navbar():
         expand=True,
         dark=True,
         color='default',
-        #sticky="top",
+        sticky="top",
         fluid=True,
-        #style={'background':'FFFFFF'}
+        style={'position':'absolute', 'width':'100%'}
         #className=" bg-transparent",
     )
     return navbar
@@ -64,8 +71,65 @@ def CasesDropdown():
     )
     return cases_dropdown
     
-    
-    
+def Footer():    
+    footer =  html.Div(
+                    className='row',
+                    children=[
+                      html.Div(
+                        className='col',
+                        children=[
+                          html.P(['Data source ', html.Span(className="fa fa-pie-chart")],style={'color': colors['text']}, ),
+                          html.A(
+                              'Johns Hopkins CSSE',
+                              href='https://github.com/CSSEGISandData/COVID-19',
+                              className="a links",
+                          )                    
+                        ]
+                      ),
+                      html.Div(
+                        className='col',
+                        children=[
+                          html.P(
+                            'Code avaliable at:',style={'color': colors['text']}
+                          ),
+                          html.A(
+                              'Github',
+                              href='https://github.com/addenergyx/coronavirus-tracker',
+                              className="a links",
+                          )                    
+                        ]
+                      ),
+                      html.Div(
+                        className='col',
+                        children=[
+                          html.P(
+                            'Made with:', style={'color': colors['text']}
+                          ),
+                          html.A(
+                              'Dash / Plot.ly',
+                              href='https://plot.ly/dash/', 
+                              className="a links",
+                          ),
+                          html.Br(),
+                          html.A(
+                              'News API',
+                              href='https://newsapi.org/',
+                              className="a links",
+                          ), 
+                          html.Br(),
+                          html.A(
+                              'Flaticon',
+                              href='https://www.flaticon.com/authors/photo3idea-studio',
+                              className="a links",
+                          ),
+                        ]
+                      ),                                                         
+                    ],        
+                    style={
+                        'padding': 40
+                    }
+                )
+    return footer
     
     
     

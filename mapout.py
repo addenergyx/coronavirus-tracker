@@ -13,7 +13,7 @@ import pandas as pd
 import dash_daq as daq
 from dash.dependencies import Input, Output
 import numpy as np
-from components import NationsDropdown, CasesDropdown, Navbar
+from components import NationsDropdown, CasesDropdown, Navbar, Footer
 from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, unix_to_date, getTimeScaleUnix, getTimeScale
 
 import plotly.express as px
@@ -219,57 +219,13 @@ body = html.Div(
             )
        ]),
        
-    ## Footer
-    html.Div(
-        className='row',
-        children=[
-          html.Div(
-            className='col',
-            children=[
-              html.P(
-                'Data source:',style={'color': colors['text']}
-              ),
-              html.A(
-                  'Johns Hopkins CSSE',
-                  href='https://github.com/CSSEGISandData/COVID-19'
-              )                    
-            ]
-          ),
-          html.Div(
-            className='col',
-            children=[
-              html.P(
-                'Code avaliable at:',style={'color': colors['text']}
-              ),
-              html.A(
-                  'Github',
-                  href='https://github.com/addenergyx/coronavirus-tracker'
-              )                    
-            ]
-          ),
-          html.Div(
-            className='col',
-            children=[
-              html.P(
-                'Made with:', style={'color': colors['text']}
-              ),
-              html.A(
-                  'Dash / Plot.ly',
-                  href='https://plot.ly/dash/'
-              )                    
-            ]
-          ),                                                         
-        ],        
-        style={
-            'padding': 40
-        }
-    )## 
   ])
     
 def Homepage():
     layout = html.Div([
         Navbar(),
-        body
+        body,
+        Footer()
     ], style={'backgroundColor': colors['background']})
     return layout
 
