@@ -261,7 +261,7 @@ colors = {
 
 modal = html.Div(
     [
-        dbc.Button("Tips to Stay Safe", id="open", className="btn btn-outline-primary", style={'float':'right', 'backgroundColor':'none'}),
+        dbc.Button("Tips to Stay Safe", id="open", className="btn btn-outline-primary", style={'float':'right', 'background-color':'transparent'}),
         dbc.Modal(
             [
                 html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()), style={'width':'100px', 'margin':'0 auto', 'margin-top':'20px'}),
