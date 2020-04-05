@@ -34,7 +34,7 @@ import dash_table
 
 import base64
 
-image_filename = 'assets/hand-wash.png'
+image_filename = 'assets/img/hand-wash.png'
 encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 interval_state = 60000
@@ -255,12 +255,13 @@ cards = html.Div([
 
 colors = {
     'background': '#191A1A',
-    'text': '#FFFFFF'
+    'text': '#FFFFFF',
+    'secondary':'#2B2B2B'
 }
 
 modal = html.Div(
     [
-        dbc.Button("Tips to Stay Safe", id="open", className="ml-auto btn-info", style={'float':'right'}),
+        dbc.Button("Tips to Stay Safe", id="open", className="btn btn-outline-primary", style={'float':'right', 'backgroundColor':'none'}),
         dbc.Modal(
             [
                 html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()), style={'width':'100px', 'margin':'0 auto', 'margin-top':'20px'}),
@@ -804,9 +805,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
-    #app.run_server()
+# if __name__ == '__main__':
+#     app.run_server(debug=True, use_reloader=False)
+#     #app.run_server()
 
 
 

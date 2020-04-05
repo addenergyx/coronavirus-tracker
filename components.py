@@ -5,20 +5,25 @@ Created on Mon Mar 23 18:16:34 2020
 @author: david
 """
 
+import base64
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 
 colors = {
     'background': '#191A1A',
-    'text': '#FFFFFF'
+    'text': '#FFFFFF',
+    'secondary':'#2B2B2B'
 }
 
+image_filename = 'assets/img/Coronavirus.png'
+encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 def Navbar():
     navbar = dbc.NavbarSimple( 
         #id='navbar',
         children=[
+            #html.A(html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()), height="50px"), href="../", className='mr-auto'),
             dbc.NavItem(dbc.NavLink("Home", href="../", external_link=True,)),
             dbc.NavItem(dbc.NavLink("Tracker", href="../tracker/", external_link=True)),
             dbc.NavItem(dbc.NavLink("Map", href="../map/", external_link=True)),
