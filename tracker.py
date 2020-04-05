@@ -6,7 +6,7 @@ Created on Thu Mar 12 19:39:52 2020
 """
 from server import server
 import os
-from components import NationsDropdown, CasesDropdown, Navbar
+from components import NationsDropdown, CasesDropdown, Navbar, Footer
 from dataset import get_jhu_dataset, getMarks, clean_data, unix_to_date, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff, get_data_from_postgres
 import dash_daq as daq
 
@@ -31,6 +31,11 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
 import dash_table
+
+import base64
+
+image_filename = 'assets/hand-wash.png'
+encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 interval_state = 60000
 url = 'https://www.worldometers.info/coronavirus/'
@@ -113,7 +118,7 @@ external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes
 
 app = dash.Dash(name='tracker', server=server, url_base_pathname='/tracker/', external_stylesheets=external_stylesheets, 
                 meta_tags=[
-                    #{ 'name':'viewport','content':'width=device-width, initial-scale=1' },## Fixes media query not showing
+                    #{ 'name':'viewport','content':'width=device-width, initial-scale=1, shrink-to-fit=no' },## Fixes media query not showing
                     {
                         'name':'description',
                         'content':'This dashboard is designed to monitor events, deaths, and recoveries reported by several sources such as WHO and Johns Hopkins University on the n-Cov (Coronavirus). This constantly searches repositories and reviews all countries case studies.',
@@ -237,12 +242,12 @@ days_card = [
 cards = html.Div([
         dbc.Row(
             [
-                dbc.Col(dbc.Card(days_card, color="light", style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
-                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
-                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
-                dbc.Col(children=[dbc.Card(recovered_card, color="success", inverse=True, style={'margin':'10px', 'height':'85%'}), progress], width=12, lg=2),
-                dbc.Col(dbc.Card(mortality_card, color="warning", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
-                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, style={'margin':'10px', 'height':'85%'}), width=12, lg=2),
+                dbc.Col(dbc.Card(days_card, color="light", className='card-style'), width=12, lg=2),
+                dbc.Col(dbc.Card(confirmed_card, color="primary", inverse=True, className='card-style'), width=12, lg=2),
+                dbc.Col(dbc.Card(death_card, color="danger", inverse=True, className='card-style'), width=12, lg=2),
+                dbc.Col(children=[dbc.Card(recovered_card, color="success", inverse=True, className='card-style'), progress], width=12, lg=2),
+                dbc.Col(dbc.Card(mortality_card, color="warning", inverse=True, className='card-style'), width=12, lg=2),
+                dbc.Col(dbc.Card(affected_card, color="dark", inverse=True, className='card-style'), width=12, lg=2),
             ],
             no_gutters=True,
         ),
@@ -255,23 +260,47 @@ colors = {
 
 modal = html.Div(
     [
-        dbc.Button(" Recovery Data", id="open", className="ml-auto btn-danger fa fa-send", style={'float':'right'}),
+        dbc.Button("Tips to Stay Safe", id="open", className="ml-auto btn-info", style={'float':'right'}),
         dbc.Modal(
             [
-                dbc.ModalHeader("Recovery Data"),
-                dbc.ModalBody("John Hopkins University which is the source for this data has decided to drop support for recovery data." +
-                              "There is now recovery data for most but not all countries. Sorry for the inconvenience"),
-                dbc.ModalFooter(
-                    dbc.Button("Close", id="close", className="ml-auto")
+                html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()), style={'width':'100px', 'margin':'0 auto', 'margin-top':'20px'}),
+                dbc.ModalHeader("STAY HOME, SAVE LIVES", style={'margin':'0 auto'}),
+                dbc.ModalBody(["The virus is believed to spread mainly through the respiratory droplets formed whenever an infected individual coughs or sneezes through human interaction.", 
+                               html.Br(), html.Br(),
+                               "Frequently Wash your hands with soap and water for at least 30 seconds. Avoid touching your eyes, nose, and mouth with unwashed hands."],
+                              style={'textAlign':'center'}),
+                dbc.ModalFooter([
+                    dbc.Button("Close", id="close", className="ml-auto"),
+                    #dbc.Button("Next", id="next", className="ml-auto")
+                    ]
                 ),
             ],
             id="modal",
+            centered=True,
+            scrollable=True,
         ), 
     ], style={'padding-right':'20px','padding-bottom':'40px'},
 )
 
+modal2 = html.Div(
+    [
+        dbc.Modal(
+            [
+                dbc.ModalHeader("STAY HOME, SAVE LIVES", style={'margin':'0 auto'}),
+                dbc.ModalBody("Frequently Wash your hands with soap and water for at least 20 seconds. Always Carry a hand sanitizer that contains at least 60% alcohol. Avoid touching your eyes, nose, and mouth with unwashed hands.",
+                              style={'textAlign':'center'}),
+                dbc.ModalFooter([
+                    dbc.Button("Close", id="close2", className="ml-auto"),
+                ]),
+            ],
+            id="modal2",
+            centered=True,
+        ), 
+    ],
+)
+
 body = html.Div([
-    html.Div(children=[ html.H1('Coronavirus (COVID-19) Global Tracker',
+    html.Div(children=[ Navbar(), html.H1('Coronavirus (COVID-19) Global Tracker',
                                 style={'border':'1px solid #FFFFFF',
                                        'padding':'20px',
                                        'width':'40%',
@@ -316,8 +345,10 @@ body = html.Div([
         interval=3600000*3,
         n_intervals=0,
     ),
-    #html.Div(modal),
     
+    html.Div(modal),
+    html.Div(modal2),
+        
     ## CHARTS ROW
     html.Div([
         dbc.Row(
@@ -421,63 +452,14 @@ body = html.Div([
     # ]),
     
     html.Div(id='recovery-intermediate-value', style={'display': 'none'}),
-
-    # Footer
-    html.Div(
-        className='row',
-        children=[
-          html.Div(
-            className='col',
-            children=[
-              html.P(['Data source ', html.Span(className="fa fa-pie-chart")],style={'color': colors['text']}, ),
-              html.A(
-                  'Johns Hopkins CSSE',
-                  href='https://github.com/CSSEGISandData/COVID-19'
-              )                    
-            ]
-          ),
-          html.Div(
-            className='col',
-            children=[
-              html.P(
-                'Code avaliable at:',style={'color': colors['text']}
-              ),
-              html.A(
-                  'Github',
-                  href='https://github.com/addenergyx/coronavirus-tracker'
-              )                    
-            ]
-          ),
-          html.Div(
-            className='col',
-            children=[
-              html.P(
-                'Made with:', style={'color': colors['text']}
-              ),
-              html.A(
-                  'Dash / Plot.ly',
-                  href='https://plot.ly/dash/', 
-                  className=" a links",
-              ),
-              html.Br(),
-              html.A(
-                  'News API',
-                  href='https://newsapi.org/',
-                  className="a links",
-              )                    
-            ]
-          ),                                                         
-        ],        
-        style={
-            'padding': 40
-        }
-    )  
+ 
   ])
 
 def Homepage():
     layout = html.Div([
-    Navbar(),
-    body
+    #Navbar(),
+    body,
+    Footer()
     ], style={'backgroundColor': colors['background']})
     return layout
 
@@ -712,6 +694,17 @@ def toggle_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
+
+
+# @app.callback(
+#     [Output("modal2", "is_open"), Output("modal", "is_open")],
+#     [Input("next", "n_clicks"), Input("close2", "n_clicks")],
+#     [State("modal2", "is_open")],
+# )
+# def toggle_modal2(n1, n2, is_open2, is_open):
+#     if n1 or n2:
+#         return not is_open2 and not is_open
+#     return is_open2 and not is_open
                                      
 @app.callback(Output('corona-map', 'figure'), [Input('nation','value'), Input('case','value'), 
                                                Input('exclude-china','value'), Input('time-frame','value')])
@@ -811,9 +804,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True, use_reloader=False)
-#     #app.run_server()
+if __name__ == '__main__':
+    app.run_server(debug=True, use_reloader=False)
+    #app.run_server()
 
 
 
