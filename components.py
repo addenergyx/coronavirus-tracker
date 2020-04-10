@@ -85,10 +85,16 @@ def Footer():
                         children=[
                           html.P(['Data source ', html.Span(className="fa fa-pie-chart")],style={'color': colors['text']}, ),
                           html.A(
-                              'Johns Hopkins CSSE',
+                              'Johns Hopkins University',
                               href='https://github.com/CSSEGISandData/COVID-19',
                               className="a links",
-                          )                    
+                          ),
+                          html.Br(),
+                          html.A(
+                              'TrackCorona',
+                              href='https://www.trackcorona.live/api',
+                              className="a links",
+                          ), 
                         ]
                       ),
                       html.Div(
