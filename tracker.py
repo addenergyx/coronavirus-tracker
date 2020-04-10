@@ -7,7 +7,7 @@ Created on Thu Mar 12 19:39:52 2020
 from server import server
 import os
 from components import NationsDropdown, CasesDropdown, Navbar, Footer
-from dataset import get_jhu_dataset, getMarks, clean_data, unix_to_date, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff, get_data_from_postgres
+from dataset import get_jhu_dataset, getMarks, clean_data, unix_to_date, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff, get_data_from_postgres, get_daily_report
 import dash_daq as daq
 
 import datetime
@@ -408,6 +408,33 @@ body = html.Div([
       ),
     ]),
     
+    html.Div([
+        dbc.Row([
+            dbc.Col(
+                dash_table.DataTable(
+                    id='table',
+                    columns=[{"name": i, "id": i, "selectable": True} for i in get_daily_report().columns],
+                    data=get_daily_report().to_dict("rows"),
+                    filter_action="native",
+                    sort_action="native",
+                    style_table={'color': 'white', 'overflowY': 'scroll', 'overflowX': 'hidden', 'height':'600px'},
+                    style_data={'color':'white'},
+                    style_header={'backgroundColor': 'rgb(30, 30, 30)'},
+                    fixed_rows={ 'headers': True, 'data': 0 },
+                    style_cell={
+                        'backgroundColor': 'rgb(50, 50, 50)',
+                        'color': 'white',
+                        'minWidth': '80px', 
+                        'width': '80px', 
+                        'maxWidth': '100px', 
+                        'font_size': '20px',
+                        'textAlign':'center',
+                    },
+                )
+            )
+        ])
+    ], style={'padding': '50px'} ),
+    
     # html.Div([
     #     dbc.Row(
     #         [ 
@@ -458,10 +485,10 @@ body = html.Div([
 
 def Homepage():
     layout = html.Div([
-    #Navbar(),
+    Navbar(),
     body,
     Footer()
-    ], style={'backgroundColor': colors['background']})
+    ], style={'backgroundColor': colors['background'], 'overflow-x': 'hidden'})
     return layout
 
 # we need to set layout to be a function so that for each new page load                                                                                                       
@@ -537,7 +564,7 @@ def update_pie(unix_date):
      Output('time-frame','marks'),],
     [Input("data-interval-component", "n_intervals")])
 def update_slider(n): 
-    print("slide frank ocean")
+    #print("slide frank ocean")
     return getTimeScaleUnix()[0], getTimeScaleUnix()[-1], getMarks(6)
 
 ### Animate map using method above
@@ -546,24 +573,24 @@ on button click
 input nintervals every second slider goes up one therefore change map
 '''
 
-@app.callback(Output("recovery-intermediate-value", "children"),[Input("data-interval-component", "n_intervals")])
-def update_data(n):
+# @app.callback(Output("recovery-intermediate-value", "children"),[Input("data-interval-component", "n_intervals")])
+# def update_data(n):
    
-    # ts_confirmed, ts_death = get_jhu_dataset()
-    # ts_recovered = pd.read_csv('recovered.csv')
-    # #ts_recovered = get_recovery_dataset() 
+#     ts_confirmed, ts_death = get_jhu_dataset()
+#     ts_recovered = pd.read_csv('recovered.csv')
+#     #ts_recovered = get_recovery_dataset() 
 
-    # clean_data(ts_confirmed)
-    # clean_data(ts_death)
-    # clean_data(ts_recovered)
+#     clean_data(ts_confirmed)
+#     clean_data(ts_death)
+#     clean_data(ts_recovered)
 
-    # ts_confirmed.to_csv('confirmed.csv', index=False)
-    # ts_death.to_csv('deaths.csv', index=False)
-    # ts_recovered.to_csv('recovered.csv', index=False)
+#     ts_confirmed.to_csv('confirmed.csv', index=False)
+#     ts_death.to_csv('deaths.csv', index=False)
+#     ts_recovered.to_csv('recovered.csv', index=False)
     
-    # print("All Data Updated")
+#     print("All Data Updated")
     
-    return "Data Updated"
+#     return "Data Updated"
 
 @app.callback(
     [Output("progress", "value"), Output("progress", "children")],
@@ -805,9 +832,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True, use_reloader=False)
-#     #app.run_server()
+if __name__ == '__main__':
+    app.run_server(debug=True, use_reloader=False)
+    #app.run_server()
 
 
 
