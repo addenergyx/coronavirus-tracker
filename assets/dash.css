@@ -11,6 +11,10 @@
   min-height: 70vh;
 }
 
+#open:hover {
+    background-color: #007bff;
+}
+
 .parallax {
   /* Full height */
   height: 100%;
