@@ -5,7 +5,7 @@ Created on Thu Apr  2 10:38:54 2020
 @author: david
 """
 
-from dataset import get_jhu_dataset, get_recovery_dataset
+from dataset import get_jhu_dataset, get_recovery_dataset, get_animation_frame
 
 import os
 
@@ -43,7 +43,7 @@ engine = create_engine(db_URI)
 
 ts_confirmed, ts_death = get_jhu_dataset()
 ts_recovered = get_recovery_dataset() 
-
+timelapse = get_animation_frame()
 # clean_data(ts_confirmed)
 # clean_data(ts_death)
 # clean_data(ts_recovered)
@@ -59,5 +59,6 @@ ts_recovered = get_recovery_dataset()
 ts_confirmed.to_sql('confirmed', engine, if_exists='replace')
 ts_recovered.to_sql('recovered', engine, if_exists='replace')
 ts_death.to_sql('deaths', engine, if_exists='replace')
+timelapse.to_sql('timelapse', engine, if_exists='replace')
 
 print("All Data Updated")

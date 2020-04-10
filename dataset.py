@@ -16,6 +16,8 @@ import numpy as np
 import requests
 from geopy.geocoders import Nominatim, GoogleV3
 from sqlalchemy import create_engine
+import dateparser
+
 
 
 ## Date column names
@@ -32,7 +34,7 @@ def get_jhu_dataset():
     
     ## Timeseries pull request
     data = covid19.getAll(timelines=True)
-    
+        
     ## Timeseries data
     timeline = data["locations"]
     
@@ -231,14 +233,73 @@ def get_data_from_postgres():
     
     return ts_confirmed, ts_death, ts_recovered
 
+def get_animation_from_postgres():
+    db_URI = os.getenv('DATABASE_URL')
+    engine = create_engine(db_URI)
+    
+    time_lapse = pd.read_sql_table("timelapse", con=engine, index_col='index')
+    return time_lapse
+    
+
+def get_daily_report():
+    
+    url = 'https://www.trackcorona.live/api/countries/'
+    r = requests.get(url)
+    
+    countries = r.json()['data']
+    
+    daily_report = pd.DataFrame(countries)
+    
+    daily_report.drop(['country_code','latitude','longitude'], axis=1, inplace=True)
+    
+    daily_report.columns = ['Country', 'Confirmed','Deaths','Recovered','Last Updated']
+    today = datetime.datetime.utcnow()
+    
+    #time = '2020-04-04 14:20:15.168554+00:00'
+    
+    for i, row in daily_report.iterrows():
+        time = row['Last Updated']
+        datetime_object = dateparser.parse(time)
+        start = datetime_object.replace(tzinfo=None)
+        delta = today - start
+              
+        if delta.days == 1:
+            daily_report.loc[i,'Last Updated'] = f"{delta.days} day ago"
+        elif delta.days > 0:
+            daily_report.loc[i,'Last Updated'] = f"{delta.days} days ago"
+        elif (delta.seconds // 3600) == 0:
+            daily_report.loc[i,'Last Updated'] = f"{(delta.seconds//60)%60} minutes ago"
+        elif (delta.seconds//3600) == 1:
+            daily_report.loc[i,'Last Updated'] = "1 hour ago"
+        else:
+            daily_report.loc[i,'Last Updated'] = f"{(delta.seconds//3600)} hours ago"
+            
+    return daily_report
 
 
-
-
-
-
-
-
+def get_animation_frame():
+    lookup = pd.read_csv('UID_ISO_FIPS_LookUp_Table.csv')
+    
+    url = 'https://pomber.github.io/covid19/timeseries.json'
+    r = requests.get(url)
+    
+    countries = r.json()
+    
+    df = pd.DataFrame(columns=['country','date','confirmed','deaths','recovered'])
+    
+    for country, data in countries.items():
+        print(country)
+        a = lookup[lookup['Country_Region'] == country]
+    
+        for dic in data:
+            dic.update({'country' : country, 
+                        'Latitude': a['Lat'].iloc[0],
+                        'Longitude': a['Long_'].iloc[0]
+                        })
+            df = df.append(dic, ignore_index=True)
+            
+            # df.to_csv('animation.csv')
+    return df 
 
 
 
