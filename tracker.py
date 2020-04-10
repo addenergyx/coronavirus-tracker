@@ -47,6 +47,8 @@ def get_new_data():
     
     """Updates the global variable 'data' with new data"""
     # Global variables will break the app https://dash.plotly.com/sharing-data-between-callbacks
+    # Setting global variables in Dash isn’t safe as the memory isn’t shared across processes. 
+    # In general, it is not safe to mutate data outside of the scope of a callback!
     #global ts_confirmed, ts_death, ts_recovered
     # ts_confirmed, ts_death = get_jhu_dataset()
     # #ts_recovered = get_recovery_dataset()   
@@ -357,11 +359,15 @@ body = html.Div([
                 
             ## PIE CHART
             dbc.Col(
-                html.Div(
-                    [
-                        #html.P('Cases Distribution', style={'color':colors['text'], 'textAlign':'left'}),
-                        dcc.Graph(id='pie-chart',)
-                    ]
+                dcc.Loading(
+                    children=[
+                        html.Div(
+                            [
+                                #html.P('Cases Distribution', style={'color':colors['text'], 'textAlign':'left'}),
+                                dcc.Graph(id='pie-chart',)
+                            ]
+                        )
+                    ], type='circle'
                 ), width=12,lg=3),          
             
             ## LINE GRAPH
@@ -370,7 +376,7 @@ body = html.Div([
                     [
                         dcc.Graph(id='time-series-confirmed'),
                     ]
-                ),width=12, lg=9),
+            ), width=12, lg=9),
              
             ]
         )
@@ -400,13 +406,17 @@ body = html.Div([
         ),
     ]),
     
-    html.Div([
-      dcc.Graph(
-        id='corona-map',
-        #figure=fig,
-        style={'margin' : '0'}        
-      ),
-    ]),
+    dcc.Loading(
+        children=[
+            html.Div([
+              dcc.Graph(
+                id='corona-map',
+                #figure=fig,
+                style={'margin' : '0'}        
+              ),
+            ]),
+        ], type='circle',
+    ),
     
     html.Div([
         dbc.Row([
@@ -832,9 +842,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
-    #app.run_server()
+# if __name__ == '__main__':
+#     app.run_server(debug=True, use_reloader=False)
+#     #app.run_server()
 
 
 

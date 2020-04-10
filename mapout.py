@@ -207,14 +207,17 @@ body = html.Div(
                       #       ),
                       #    ]),
                       # ], width={"size": 2, "offset":9}),
-                      
-                      html.Div([
-                          dcc.Graph(
-                            id='corona-map',
-                            #figure=fig,
-                            style={'margin' : '0'},
-                          ),
-                        ]),
+                      dcc.Loading(
+                          children=[
+                              html.Div([
+                                  dcc.Graph(
+                                    id='corona-map',
+                                    #figure=fig,
+                                    style={'margin' : '0'},
+                                  ),
+                             ])
+                         ], type='circle',
+                      )
                   ],style={'padding-top':'80px'}, width=12, lg=9
             )
        ]),
@@ -334,9 +337,9 @@ def update_map(selected_nation, selected_case):
 
 app.layout = Homepage()
 
-if __name__ == "__main__":
-    #app.run_server()
-    app.run_server(debug=True, use_reloader=False)
+# if __name__ == "__main__":
+#     #app.run_server()
+#     app.run_server(debug=True, use_reloader=False)
 
 
     
