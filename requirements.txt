@@ -24,6 +24,7 @@ dash-html-components==1.0.2
 dash-renderer==1.2.4
 dash-table==4.6.1
 dash-daq==0.4.0
+dateparser==0.7.4
 decorator==4.4.1
 defusedxml==0.6.0
 diff-match-patch==20181111
