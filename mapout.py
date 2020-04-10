@@ -226,7 +226,7 @@ def Homepage():
         Navbar(),
         body,
         Footer()
-    ], style={'backgroundColor': colors['background'], 'overflow-x': 'hidden'})
+    ], style={'backgroundColor': colors['background'], 'overflow-x': 'hidden', 'height':'100%'})
     return layout
 
 # @app.callback(Output('time-frame','value'), [Input('time-lapse','n_intervals')])
