@@ -59,6 +59,31 @@ timelapse = get_animation_frame()
 ts_confirmed.to_sql('confirmed', engine, if_exists='replace')
 ts_recovered.to_sql('recovered', engine, if_exists='replace')
 ts_death.to_sql('deaths', engine, if_exists='replace')
+
+db_URI = os.getenv('AWS_DATABASE_URL')
+engine = create_engine(db_URI)
+
 timelapse.to_sql('timelapse', engine, if_exists='replace')
 
 print("All Data Updated")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

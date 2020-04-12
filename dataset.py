@@ -234,7 +234,7 @@ def get_data_from_postgres():
     return ts_confirmed, ts_death, ts_recovered
 
 def get_animation_from_postgres():
-    db_URI = os.getenv('DATABASE_URL')
+    db_URI = os.getenv('AWS_DATABASE_URL')
     engine = create_engine(db_URI)
     
     time_lapse = pd.read_sql_table("timelapse", con=engine, index_col='index')
