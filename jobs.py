@@ -42,8 +42,20 @@ engine = create_engine(db_URI)
 # client = gspread.authorize(creds)
 
 ts_confirmed, ts_death = get_jhu_dataset()
-ts_recovered = get_recovery_dataset() 
+ts_recovered = get_recovery_dataset()
+
+db_URI = os.getenv('AWS_DATABASE_URL')
+engine = create_engine(db_URI)
+
+ts_confirmed.to_sql('confirmed', engine, if_exists='replace')
+ts_recovered.to_sql('recovered', engine, if_exists='replace')
+ts_death.to_sql('deaths', engine, if_exists='replace')
+
+
 timelapse = get_animation_frame()
+
+timelapse.to_sql('timelapse', engine, if_exists='replace')
+
 # clean_data(ts_confirmed)
 # clean_data(ts_death)
 # clean_data(ts_recovered)
@@ -55,15 +67,6 @@ timelapse = get_animation_frame()
 # pandas_to_sheets(ts_confirmed, confirmed_sheet)
 # pandas_to_sheets(ts_death, death_sheet)
 # pandas_to_sheets(ts_recovered, recovered_sheet)
-
-ts_confirmed.to_sql('confirmed', engine, if_exists='replace')
-ts_recovered.to_sql('recovered', engine, if_exists='replace')
-ts_death.to_sql('deaths', engine, if_exists='replace')
-
-db_URI = os.getenv('AWS_DATABASE_URL')
-engine = create_engine(db_URI)
-
-timelapse.to_sql('timelapse', engine, if_exists='replace')
 
 print("All Data Updated")
 

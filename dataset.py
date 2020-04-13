@@ -224,7 +224,7 @@ def get_data_from_postgres():
     # ts_death = pd.DataFrame(death_sheet.get_all_records())
     # ts_confirmed = pd.DataFrame(confirmed_sheet.get_all_records())
         
-    db_URI = os.getenv('DATABASE_URL')
+    db_URI = os.getenv('AWS_DATABASE_URL')
     engine = create_engine(db_URI)
     
     ts_confirmed = pd.read_sql_table("confirmed", con=engine, index_col='index')
