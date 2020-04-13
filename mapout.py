@@ -187,7 +187,7 @@ body = html.Div(
                         html.Div([
                             html.H3("Global Coronavirus News", style={'color': colors['text'], 'text-align':'center'}),
                             generate_html_table()
-                        ],style={'padding-bottom':'20px'}),
+                        ],style={'padding-bottom':'20px','padding-top':'20px'}),
                         ], style={'padding-right':'20px','padding-left':'20px'}),
                     ], width=12,lg=3, className='card', style={'backgroundColor': colors['secondary'],'padding-top':'80px'} ),
               
