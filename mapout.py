@@ -13,7 +13,7 @@ import pandas as pd
 import dash_daq as daq
 from dash.dependencies import Input, Output
 import numpy as np
-from components import NationsDropdown, CasesDropdown, Navbar, Footer
+from components import NationsDropdown, CasesDropdown, Navbar, Footer, Banner
 from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, unix_to_date, getTimeScaleUnix, getTimeScale, get_animation_frame, get_animation_from_postgres
 
 import plotly.express as px
@@ -228,7 +228,8 @@ def Homepage():
     layout = html.Div([
         Navbar(),
         body,
-        Footer()
+        Footer(),
+        Banner()
     ], style={'backgroundColor': colors['background'], 'overflow-x': 'hidden', 'height':'100%'})
     return layout
 

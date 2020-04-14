@@ -6,7 +6,7 @@ Created on Thu Mar 12 19:39:52 2020
 """
 from server import server
 import os
-from components import NationsDropdown, CasesDropdown, Navbar, Footer
+from components import NationsDropdown, CasesDropdown, Navbar, Footer, Banner
 from dataset import get_jhu_dataset, getMarks, clean_data, unix_to_date, getTimeScale, getTimeScaleUnix, get_deaths_diff, get_cases_diff, get_recovery_diff, get_data_from_postgres, get_daily_report
 import dash_daq as daq
 
@@ -497,7 +497,8 @@ def Homepage():
     layout = html.Div([
     Navbar(),
     body,
-    Footer()
+    Footer(),
+    Banner()
     ], style={'backgroundColor': colors['background'], 'overflow-x': 'hidden'})
     return layout
 
