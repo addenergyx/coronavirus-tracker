@@ -18,8 +18,6 @@ from geopy.geocoders import Nominatim, GoogleV3
 from sqlalchemy import create_engine
 import dateparser
 
-
-
 ## Date column names
 def getList(dict): 
     return list(dict.keys()) 
@@ -153,6 +151,8 @@ def unix_to_date(unix_date):
 
 def get_recovery_dataset():
     
+    lookup = pd.read_csv('UID_ISO_FIPS_LookUp_Table.csv')
+    
     url = 'https://pomber.github.io/covid19/timeseries.json'
     
     r = requests.get(url)
@@ -171,25 +171,31 @@ def get_recovery_dataset():
         column_names.extend([datetime.datetime.strptime(x, "%Y-%m-%d").strftime("%-m/%-d/%y") for x in dates])
         
     recovery_row_list = []
-    
-    geolocator = Nominatim(timeout=1000 , user_agent="http://www.coronavirustracker.co.uk/tracker/")
-    
+        
     print("Updating Recovery Data")
     for country,times in countries.items():
         
-        geolocator = GoogleV3(api_key=os.getenv('MAPS_API_KEY') , user_agent="http://www.coronavirustracker.co.uk/tracker/") #Google is faster but breaks
-        location = geolocator.geocode(country)
-        print(location)
-
-        if location is None:
-            geolocator = Nominatim(timeout=1000 , user_agent="http://www.coronavirustracker.co.uk/tracker/") #Google can't find ms zaandam
+        a = lookup[lookup['Country_Region'] == country]
+        
+        ## Using Google api as backup if country not in JHU Lookup table
+        ## Lookup Table alot quicker then Google Maps API
+        if a.empty:
+            geolocator = GoogleV3(api_key=os.getenv('MAPS_API_KEY') , user_agent="http://www.coronavirustracker.co.uk/tracker/") #Google is faster but missing some locations
             location = geolocator.geocode(country)
-            print(f"Nominatim - {location}")
+            #print(location)
+    
+            if location is None:
+                geolocator = Nominatim(timeout=1000 , user_agent="http://www.coronavirustracker.co.uk/tracker/") #Google can't find 'ms zaandam'
+                location = geolocator.geocode(country)
+                print(f"Nominatim - {location}")
 
-        # print(location.latitude)
-        # print(location.longitude)
-        # print("--------------------------------")
-        row = [None, country, location.latitude, location.longitude]
+            # print(location.latitude)
+            # print(location.longitude)
+            # print("--------------------------------")
+            row = [None, country, location.latitude, location.longitude]
+        else:
+            print(country+' lookup table')
+            row = [None, country, a['Lat'].iloc[0], a['Long_'].iloc[0]]
         
         for a in times:
             row.append(a['recovered'])
