@@ -11,7 +11,7 @@ Created on Mon Mar 16 22:26:56 2020
 # if __name__ == '__main__':
 #     server.run()
 
-## USE IN DEV ONLY
+## USE IN DEV/LOCAL ONLY
 
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from werkzeug.serving import run_simple
