@@ -142,9 +142,14 @@ def Footer():
                 )
     return footer
     
-    
-    
-    
+def Banner():    
+    banner = html.Div(
+                html.P(['2020 © Developed with ', 
+                        html.Span(className='fa fa-heart', style={'color':'red'}), 
+                        ' by ',
+                        html.A('David Adeniji', href='https://github.com/addenergyx')], style={'color':colors['text'],}), 
+                className="footer-copyright", style={'text-align':'center'})
+    return banner
     
     
     
