@@ -418,32 +418,33 @@ body = html.Div([
         ], type='circle',
     ),
     
-    html.Div([
-        dbc.Row([
-            dbc.Col(
-                dash_table.DataTable(
-                    id='table',
-                    columns=[{"name": i, "id": i, "selectable": True} for i in get_daily_report().columns],
-                    data=get_daily_report().to_dict("rows"),
-                    filter_action="native",
-                    sort_action="native",
-                    style_table={'color': 'white', 'overflowY': 'scroll', 'overflowX': 'hidden', 'height':'600px'},
-                    style_data={'color':'white'},
-                    style_header={'backgroundColor': 'rgb(30, 30, 30)'},
-                    fixed_rows={ 'headers': True, 'data': 0 },
-                    style_cell={
-                        'backgroundColor': 'rgb(50, 50, 50)',
-                        'color': 'white',
-                        'minWidth': '80px', 
-                        'width': '80px', 
-                        'maxWidth': '100px', 
-                        'font_size': '20px',
-                        'textAlign':'center',
-                    },
-                )
-            )
-        ])
-    ], style={'padding': '50px'} ),
+    ##TODO: trackcorona api stopped working
+    # html.Div([
+    #     dbc.Row([
+    #         dbc.Col(
+    #             dash_table.DataTable(
+    #                 id='table',
+    #                 columns=[{"name": i, "id": i, "selectable": True} for i in get_daily_report().columns],
+    #                 data=get_daily_report().to_dict("rows"),
+    #                 filter_action="native",
+    #                 sort_action="native",
+    #                 style_table={'color': 'white', 'overflowY': 'scroll', 'overflowX': 'hidden', 'height':'600px'},
+    #                 style_data={'color':'white'},
+    #                 style_header={'backgroundColor': 'rgb(30, 30, 30)'},
+    #                 fixed_rows={ 'headers': True, 'data': 0 },
+    #                 style_cell={
+    #                     'backgroundColor': 'rgb(50, 50, 50)',
+    #                     'color': 'white',
+    #                     'minWidth': '80px', 
+    #                     'width': '80px', 
+    #                     'maxWidth': '100px', 
+    #                     'font_size': '20px',
+    #                     'textAlign':'center',
+    #                 },
+    #             )
+    #         )
+    #     ])
+    # ], style={'padding': '50px'} ),
     
     # html.Div([
     #     dbc.Row(
