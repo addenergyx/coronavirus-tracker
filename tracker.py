@@ -354,6 +354,9 @@ body = html.Div([
         
     ## CHARTS ROW
     html.Div([
+        
+        html.Div([html.H2(id='title')], style={'color':colors['text'], 'textAlign':'center'}),
+        
         dbc.Row(
             [
                 
@@ -525,8 +528,8 @@ app.layout = Homepage()
 #     max_value = max(df_data_FW[input])
 #     return max_value
 
-@app.callback(Output("pie-chart", "figure"),[Input('time-frame','value')])
-def update_pie(unix_date):
+@app.callback(Output("pie-chart", "figure"),[Input('time-frame','value'), Input('nation','value')])
+def update_pie(unix_date, selected_nation):
     
     
     ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
@@ -539,10 +542,22 @@ def update_pie(unix_date):
     
     date = unix_to_date(unix_date)
     
-    active = ts_confirmed[date].sum() - ts_death[date].sum() - ts_recovered[date].sum()
+    ## Country Dropdown
+    if 'Worldwide' in selected_nation or not selected_nation: 
+        #filtered_df = df
+        filtered_ts_confirmed = ts_confirmed
+        filtered_ts_death = ts_death
+        filtered_ts_recovered = ts_recovered
+    else:
+        #filtered_df = df[df['Country/Region'].isin(selected_nation)] 
+        filtered_ts_confirmed = ts_confirmed[ts_confirmed['Country/Region'].isin(selected_nation)]
+        filtered_ts_death = ts_death[ts_death['Country/Region'].isin(selected_nation)]
+        filtered_ts_recovered = ts_recovered[ts_recovered['Country/Region'].isin(selected_nation)]
+    
+    active = filtered_ts_confirmed[date].sum() - filtered_ts_death[date].sum() - filtered_ts_recovered[date].sum()
     
     labels = ['Recovered','Deaths','Active']
-    values = [ts_recovered[date].sum(),ts_death[date].sum(),active]
+    values = [filtered_ts_recovered[date].sum(),filtered_ts_death[date].sum(),active]
     
     #df = pd.DataFrame(data)
     
@@ -636,6 +651,22 @@ def update_cards(n):
 # def update_deaths(n):    
 #     return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
+@app.callback(Output('title','children'), [Input('nation','value')])
+def update_title(selected_nation):
+    
+    if not selected_nation:
+        selected_nation = ['Worldwide']
+    
+    if len(selected_nation) == 1:
+        title = ', '.join([str(x) for x in selected_nation]) + ' Cases'
+    elif len(selected_nation) == 2:
+        title = ' & '.join([str(x) for x in selected_nation]) + ' Cases'
+    else:
+        title = ', '.join([str(x) for x in selected_nation[:-1]])
+        title = title + ' & ' + f'{selected_nation[-1]} cases'
+        
+    return title
+
 @app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value'), Input('nation','value')])
 def update_graph(unix_date, selected_nation):    
     
@@ -646,17 +677,16 @@ def update_graph(unix_date, selected_nation):
     date = unix_to_date(unix_date)
     
     ## Country Dropdown
-    # if 'Worldwide' in selected_nation or not selected_nation: 
-    #     #filtered_df = df
-    #     filtered_ts_confirmed = ts_confirmed
-    #     filtered_ts_death = ts_death
-    #     filtered_ts_recovered = ts_recovered
-    #     zoom = 2
-    # else:
-    #     #filtered_df = df[df['Country/Region'].isin(selected_nation)] 
-    #     filtered_ts_confirmed = ts_confirmed[ts_confirmed['Country/Region'].isin(selected_nation)]
-    #     filtered_ts_death = ts_death[ts_death['Country/Region'].isin(selected_nation)]
-    #     filtered_ts_recovered = ts_recovered[ts_recovered['Country/Region'].isin(selected_nation)]
+    if 'Worldwide' in selected_nation or not selected_nation: 
+        #filtered_df = df
+        filtered_ts_confirmed = ts_confirmed
+        filtered_ts_death = ts_death
+        filtered_ts_recovered = ts_recovered
+    else:
+        #filtered_df = df[df['Country/Region'].isin(selected_nation)] 
+        filtered_ts_confirmed = ts_confirmed[ts_confirmed['Country/Region'].isin(selected_nation)]
+        filtered_ts_death = ts_death[ts_death['Country/Region'].isin(selected_nation)]
+        filtered_ts_recovered = ts_recovered[ts_recovered['Country/Region'].isin(selected_nation)]
       
     listy = []
     
@@ -675,9 +705,9 @@ def update_graph(unix_date, selected_nation):
     #filtered_ts_df = ts_confirmed[['City/Country','3/3/20']]
     
     ## Total events on a given day
-    filtered_ts_confirmed = ts_confirmed[listy[1:]].sum()
-    filtered_ts_death = ts_death[listy[1:]].sum()
-    filtered_ts_recovered = ts_recovered[listy[1:]].sum()
+    filtered_ts_confirmed = filtered_ts_confirmed[listy[1:]].sum()
+    filtered_ts_death = filtered_ts_death[listy[1:]].sum()
+    filtered_ts_recovered = filtered_ts_recovered[listy[1:]].sum()
     
     trace0 = go.Scatter(x=listy[1:], y=filtered_ts_confirmed,
                         mode='lines',
@@ -702,6 +732,10 @@ def update_graph(unix_date, selected_nation):
     
     data = [trace0, trace2, trace1]
     
+    # print(selected_nation)
+    # title = ' '.join([str(x) for x in selected_nation]) + ' Cases'
+    # print(title)
+    
     layout = go.Layout(paper_bgcolor='rgba(0,0,0,0)',
                        plot_bgcolor='rgba(0,0,0,0)',
                        font={
@@ -709,7 +743,7 @@ def update_graph(unix_date, selected_nation):
                             'size': 18,
                             'color': 'white'
                             },
-                       title="Global Cases",
+                       #title=title,
                        xaxis={'gridcolor':'rgb(46,47,47)','autorange': True,},
                        yaxis={'gridcolor':'rgb(46,47,47)','autorange': True,'title':'Number of cases'},
                        hovermode='closest',
@@ -721,19 +755,20 @@ def update_graph(unix_date, selected_nation):
     fig = go.Figure(data=data, layout=layout)
     
     fig.update_layout(
-    legend=dict(
-        x=0.01,
-        y=1,
-        traceorder="normal",
-        font=dict(
-            family="sans-serif",
-            size=12,
-            color="#f7f7f7"
-        ),
-        bgcolor="#292b2c",
-        bordercolor="#f7f7f7",
-        borderwidth=2,
-    )
+        #title=title,
+        legend=dict(
+            x=0.01,
+            y=1,
+            traceorder="normal",
+            font=dict(
+                family="sans-serif",
+                size=12,
+                color="#f7f7f7"
+            ),
+            bgcolor="#292b2c",
+            bordercolor="#f7f7f7",
+            borderwidth=2,
+        )
     )
 
     return fig
@@ -846,9 +881,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
-    #app.run_server()
+# if __name__ == '__main__':
+#     app.run_server(debug=True, use_reloader=False)
+#     #app.run_server()
 
 
 
