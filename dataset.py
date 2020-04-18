@@ -76,8 +76,12 @@ def get_jhu_dataset():
 
 def clean_data(frame):
     for index, row in frame.iterrows():
-      if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
-          frame['Province/State'][index] = None
+        
+        if row['Country/Region'] == 'US':
+            frame['Country/Region'][index] = 'United States'
+        
+        if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
+            frame['Province/State'][index] = None
     
     city_country = np.array(frame['Province/State'] + ", " + frame['Country/Region'] )
     frame["City/Country"] = city_country
@@ -194,7 +198,7 @@ def get_recovery_dataset():
             # print("--------------------------------")
             row = [None, country, location.latitude, location.longitude]
         else:
-            print(country+' lookup table')
+            #print(country+' lookup table')
             row = [None, country, a['Lat'].iloc[0], a['Long_'].iloc[0]]
         
         for a in times:
@@ -282,7 +286,6 @@ def get_daily_report():
             
     return daily_report
 
-
 def get_animation_frame():
     lookup = pd.read_csv('UID_ISO_FIPS_LookUp_Table.csv')
     
@@ -294,7 +297,7 @@ def get_animation_frame():
     df = pd.DataFrame(columns=['country','date','confirmed','deaths','recovered'])
     
     for country, data in countries.items():
-        print(country)
+        #print(country)
         a = lookup[lookup['Country_Region'] == country]
     
         for dic in data:
