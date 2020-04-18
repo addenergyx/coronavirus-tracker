@@ -406,8 +406,8 @@ body = html.Div([
         ),
     ]),
     
-    dcc.Loading(
-        children=[
+    # dcc.Loading(
+    #     children=[
             html.Div([
               dcc.Graph(
                 id='corona-map',
@@ -415,8 +415,8 @@ body = html.Div([
                 style={'margin' : '0'}        
               ),
             ]),
-        ], type='circle',
-    ),
+    #     ], type='circle',
+    # ),
     
     ##TODO: trackcorona api stopped working
     # html.Div([
@@ -636,14 +636,27 @@ def update_cards(n):
 # def update_deaths(n):    
 #     return "{:,d}".format(int(pull_total('Deaths:\s*(\d+.\d+)')))
 
-@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value')])
-def update_graph(unix_date):    
+@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value'), Input('nation','value')])
+def update_graph(unix_date, selected_nation):    
     
     ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
     
     #unix_date=1585440000
     
     date = unix_to_date(unix_date)
+    
+    ## Country Dropdown
+    # if 'Worldwide' in selected_nation or not selected_nation: 
+    #     #filtered_df = df
+    #     filtered_ts_confirmed = ts_confirmed
+    #     filtered_ts_death = ts_death
+    #     filtered_ts_recovered = ts_recovered
+    #     zoom = 2
+    # else:
+    #     #filtered_df = df[df['Country/Region'].isin(selected_nation)] 
+    #     filtered_ts_confirmed = ts_confirmed[ts_confirmed['Country/Region'].isin(selected_nation)]
+    #     filtered_ts_death = ts_death[ts_death['Country/Region'].isin(selected_nation)]
+    #     filtered_ts_recovered = ts_recovered[ts_recovered['Country/Region'].isin(selected_nation)]
       
     listy = []
     
@@ -734,17 +747,6 @@ def toggle_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
-
-
-# @app.callback(
-#     [Output("modal2", "is_open"), Output("modal", "is_open")],
-#     [Input("next", "n_clicks"), Input("close2", "n_clicks")],
-#     [State("modal2", "is_open")],
-# )
-# def toggle_modal2(n1, n2, is_open2, is_open):
-#     if n1 or n2:
-#         return not is_open2 and not is_open
-#     return is_open2 and not is_open
                                      
 @app.callback(Output('corona-map', 'figure'), [Input('nation','value'), Input('case','value'), 
                                                Input('exclude-china','value'), Input('time-frame','value')])
@@ -844,9 +846,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True, use_reloader=False)
-#     #app.run_server()
+if __name__ == '__main__':
+    app.run_server(debug=True, use_reloader=False)
+    #app.run_server()
 
 
 
