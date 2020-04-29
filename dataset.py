@@ -30,13 +30,20 @@ def get_jhu_dataset():
 
     covid19 = COVID19Py.COVID19(data_source="jhu")
     
+    nyt = COVID19Py.COVID19(data_source="nyt")
+    
     ## Timeseries pull request
     data = covid19.getAll(timelines=True)
+    
+    ## New York times
+    datanyt = nyt.getAll(timelines=True)
         
     ## Timeseries data
     timeline = data["locations"]
+    timelines = datanyt["locations"]
     
     iso_dict = timeline[0]['timelines']['confirmed']['timeline']
+    #iso_dict = timelines[0]['timelines']['confirmed']['timeline']
     
     iso_datetime = getList(iso_dict)
     
@@ -65,24 +72,73 @@ def get_jhu_dataset():
     
     confirmed_df = pd.DataFrame(confirmed_row_list, columns=names)               
     deaths_df = pd.DataFrame(deaths_row_list, columns=names)
+        
+    us_confirmed_row_list = []
+    us_deaths_row_list = []
+    
+    for a in timelines:    
+        crow = [ a['province'], a['country'],float(0),float(0)]
+        drow = [ a['province'],a['country'],float(0),float(0)]
+        crow.extend(getValues(a['timelines']['confirmed']['timeline']))
+        drow.extend(getValues(a['timelines']['deaths']['timeline']))
+       
+        while len(crow) != len(names):
+            crow.insert(4,0)
+            drow.insert(4,0)
+        
+        us_confirmed_row_list.append(crow)
+        us_deaths_row_list.append(drow)
+    
+    us_confirmed_df = pd.DataFrame(us_confirmed_row_list, columns=names)               
+    us_deaths_df = pd.DataFrame(us_deaths_row_list, columns=names)
+    
+    ace = us_confirmed_df.groupby(['Province/State'], as_index=False)[date_column_names].sum()
+    face = us_deaths_df.groupby(['Province/State'], as_index=False)[date_column_names].sum()
+    
+    lookup = pd.read_csv('UID_ISO_FIPS_LookUp_Table.csv')
+    
+    lat = []
+    long = []
+    cr = []
+    
+    for i, row in ace.iterrows():
+        a = lookup[lookup['Province_State'] == row['Province/State']]
+                
+        lat.append(a['Lat'].head(1).item())
+        long.append(a['Long_'].head(1).item())
+        cr.append(None)
+    
+    ace.insert(1, "Country/Region", cr, True)
+    ace.insert(2, "Lat", lat, True)
+    ace.insert(3, "Long", long, True)
+    
+    face.insert(1, "Country/Region", cr, True)
+    face.insert(2, "Lat", lat, True)
+    face.insert(3, "Long", long, True)
+    
+    confirmed_df = confirmed_df.append(ace, ignore_index = True)
+    deaths_df = deaths_df.append(face, ignore_index = True)
+    
+    ## Remove US entry, using state level instead
+    confirmed_df.drop(confirmed_df[confirmed_df['Country/Region'] == 'US'].index, inplace=True)
+    deaths_df.drop(deaths_df[deaths_df['Country/Region'] == 'US'].index, inplace=True)
     
     clean_data(confirmed_df)
     clean_data(deaths_df)
-
-    # confirmed_df.to_csv('confirmed.csv', index=False)
-    # deaths_df.to_csv('deaths.csv', index=False)
 
     return confirmed_df, deaths_df
 
 def clean_data(frame):
     for index, row in frame.iterrows():
         
-        if row['Country/Region'] == 'US':
+        if row['Country/Region'] == None:
+            frame['Country/Region'][index] = ''
+        elif row['Country/Region'] == 'US':
             frame['Country/Region'][index] = 'United States'
         
         if row['Province/State'] == row['Country/Region'] or row['Province/State'] == 'UK':
-            frame['Province/State'][index] = None
-    
+            frame['Province/State'][index] = None            
+     
     city_country = np.array(frame['Province/State'] + ", " + frame['Country/Region'] )
     frame["City/Country"] = city_country
     #df['Province/State'].fillna(df['Country/Region'], inplace=True)
@@ -246,7 +302,6 @@ def get_data_from_postgres():
 def get_animation_from_postgres():
     db_URI = os.getenv('AWS_DATABASE_URL')
     engine = create_engine(db_URI)
-    
     time_lapse = pd.read_sql_table("timelapse", con=engine, index_col='index')
     return time_lapse
     

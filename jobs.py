@@ -11,9 +11,9 @@ import os
 
 from sqlalchemy import create_engine
 
-db_URI = os.getenv('DATABASE_URL')
+# db_URI = os.getenv('DATABASE_URL')
 
-engine = create_engine(db_URI)
+# engine = create_engine(db_URI)
 
 # def iter_pd(df):
 #     for val in df.columns:
@@ -41,19 +41,17 @@ engine = create_engine(db_URI)
 
 # client = gspread.authorize(creds)
 
-ts_confirmed, ts_death = get_jhu_dataset()
-ts_recovered = get_recovery_dataset()
-
 db_URI = os.getenv('AWS_DATABASE_URL')
 engine = create_engine(db_URI)
 
+ts_confirmed, ts_death = get_jhu_dataset()
 ts_confirmed.to_sql('confirmed', engine, if_exists='replace')
-ts_recovered.to_sql('recovered', engine, if_exists='replace')
 ts_death.to_sql('deaths', engine, if_exists='replace')
 
+ts_recovered = get_recovery_dataset()
+ts_recovered.to_sql('recovered', engine, if_exists='replace')
 
 timelapse = get_animation_frame()
-
 timelapse.to_sql('timelapse', engine, if_exists='replace')
 
 # clean_data(ts_confirmed)
