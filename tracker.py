@@ -338,7 +338,7 @@ body = html.Div([
             value = getTimeScaleUnix()[-1],
             # #updatemode='drag',
             # #tooltip = { 'always_visible': True },
-            marks=getMarks(6),
+            marks=getMarks(12),
             step=1,
             ),
 
@@ -592,7 +592,7 @@ def update_pie(unix_date, selected_nation):
     [Input("data-interval-component", "n_intervals")])
 def update_slider(n): 
     #print("slide frank ocean")
-    return getTimeScaleUnix()[0], getTimeScaleUnix()[-1], getMarks(6)
+    return getTimeScaleUnix()[0], getTimeScaleUnix()[-1], getMarks(12)
 
 ### Animate map using method above
 '''
