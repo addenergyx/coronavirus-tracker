@@ -89,12 +89,12 @@ def Footer():
                               href='https://github.com/CSSEGISandData/COVID-19',
                               className="a links",
                           ),
-                          html.Br(),
-                          html.A(
-                              'TrackCorona',
-                              href='https://www.trackcorona.live/api',
-                              className="a links",
-                          ), 
+                          # html.Br(),
+                          # html.A(
+                          #     'TrackCorona',
+                          #     href='https://www.trackcorona.live/api',
+                          #     className="a links",
+                          # ), 
                         ]
                       ),
                       html.Div(
@@ -147,7 +147,7 @@ def Banner():
                 html.P(['2020 © Developed with ', 
                         html.Span(className='fa fa-heart', style={'color':'red'}), 
                         ' by ',
-                        html.A('David Adeniji', href='https://github.com/addenergyx')], style={'color':colors['text'],}), 
+                        html.A('David', href='https://github.com/addenergyx')], style={'color':colors['text']}), 
                 className="footer-copyright", style={'text-align':'center'})
     return banner
     
