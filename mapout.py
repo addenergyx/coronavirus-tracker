@@ -248,6 +248,7 @@ def Homepage():
                                               ])
 def update_map(selected_nation, selected_case):
     
+    ## For testing
     # unix_date=1584071771
     # selected_nation=['Worldwide']
     
@@ -296,15 +297,16 @@ def update_map(selected_nation, selected_case):
     # temp_all.insert(2,'Active/Recovered',temp_recovered_df[['Active/Recovered']])
     
     if selected_case == 'Deaths':
-        fig = px.scatter_mapbox(df, lat="Latitude", lon="Longitude", size='deaths', size_max=100, hover_name="country",animation_group='country', animation_frame="date")
+        fig = px.scatter_mapbox(df, lat="Latitude", lon="Longitude", size='deaths', size_max=50, hover_name="country",
+                                animation_group='country', animation_frame="date")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Red'))
     elif selected_case == 'Recovered':
         fig = px.scatter_mapbox(df, lat="Latitude", lon="Longitude", size="recovered",
-                      size_max=100, hover_name="country",animation_group='country', animation_frame="date")
+                      size_max=50, hover_name="country",animation_group='country', animation_frame="date")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Green'))
     elif selected_case == 'Confirmed':
         fig = px.scatter_mapbox(df, lat="Latitude", lon="Longitude", size="confirmed",
-                      size_max=100, hover_name="country",animation_group='country', animation_frame="date")
+                      size_max=50, hover_name="country",animation_group='country', animation_frame="date")
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=5, color='Blue'))
     else:
         fig = px.scatter_mapbox(filtered_df, lat="Latitude", lon="Longitude", size="confirmed", color='deaths',
@@ -313,17 +315,21 @@ def update_map(selected_nation, selected_case):
                               animation_group='country',
                               animation_frame="date"
                               )
-        fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
+        fig.update_traces(hoverinfo='text', marker=dict(sizemin=2))
     
     fig.update(
-            layout=dict(title=dict(x=0.5), paper_bgcolor=colors['background'] ), 
+            layout=dict(title=dict(x=0.5), paper_bgcolor=colors['background'] ),
         )
     
     fig.update_layout(
         autosize=True,
         height=750,
         #width=1500,
-        legend=dict(font=dict(color=colors['text'])),
+        font={
+            'family': 'Courier New, monospace',
+            'size': 18,
+            'color': 'white'
+        },
         hovermode='closest',
         mapbox=dict(
             accesstoken=mapbox_access_token,
