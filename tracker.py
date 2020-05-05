@@ -175,7 +175,8 @@ confirmed_card = [
     dbc.CardHeader("Total Confirmed Cases", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(id="con", className="card-title", style={'textAlign':'center'}),
+            html.H2(children=["{:,d}".format(int(pull_total('Coronavirus Cases:\s*(\d+.*\d+)')))], 
+                    id="con", className="card-title", style={'textAlign':'center'}),
             html.P("+{} in the last 24hrs".format(get_cases_diff()),className="card-text", style={'textAlign':'center'}),
         ]
     ),
@@ -185,7 +186,8 @@ death_card = [
     dbc.CardHeader("Total Deaths", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(id="dea", className="card-title", style={'textAlign':'center'}),
+            html.H2(children=["{:,d}".format(int(pull_total('Deaths:\s*(\d+.*\d+)')))], 
+                    id="dea", className="card-title", style={'textAlign':'center'}),
             html.P("+{} in the last 24hrs".format(get_deaths_diff()),className="card-text", style={'textAlign':'center'}),
         ]
     ),
@@ -195,7 +197,7 @@ recovered_card = [
     dbc.CardHeader("Total Recovered", style={'textAlign':'center'}),
     dbc.CardBody(
         [
-            html.H2(id="reco", className="card-title", style={'textAlign':'center'}),
+            html.H2(children=["{:,d}".format(pull_total('Recovered:\s*(\d+.*\d+)'))], id="reco", className="card-title", style={'textAlign':'center'}),
             html.P("+{} in the last 24hrs".format(get_recovery_diff()),className="card-text", style={'textAlign':'center'}),
         ]
     ),
@@ -220,10 +222,174 @@ affected_card = [
 ]
 
 progress = html.Div([
-        dbc.Progress(id="progress", className="mr-2 ml-2 mb-3", color="success",striped=True, animated=True),
-        dcc.Interval(id="progress-interval", n_intervals=0, interval=interval_state),
-    ])
+                dbc.Progress(id="progress", className="mr-2 ml-2 mb-3", color="success",striped=True, animated=True),
+                dcc.Interval(id="progress-interval", n_intervals=0, interval=interval_state),
+            ])
 
+def initial_map():
+    
+    ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
+    
+    date = ts_confirmed.columns[-2]
+    
+    zoom = 2    
+    
+    filtered_ts_confirmed = ts_confirmed
+    filtered_ts_death = ts_death
+    filtered_ts_recovered = ts_recovered
+    
+    px.set_mapbox_access_token(mapbox_access_token)
+        
+    ## Rename columns to prettify hover data
+    temp_deaths_df = filtered_ts_death.rename(columns = {date:'Deaths', 'Lat':'Latitude', 'Long':'Longitude'})
+    temp_recovered_df = filtered_ts_recovered.rename(columns = {date:'Recovered', 'Lat':'Latitude', 'Long':'Longitude'})
+    temp_confirmed_df = filtered_ts_confirmed.rename(columns = {date:'Confirmed', 'Lat':'Latitude', 'Long':'Longitude'})
+
+    #Some data from JHU appears as -1 unsure why
+    temp_recovered_df[temp_recovered_df['Recovered'] < 0] = 0
+    temp_confirmed_df[temp_confirmed_df['Confirmed'] < 0] = 0
+    temp_deaths_df[temp_deaths_df['Deaths'] < 0] = 0
+
+    #assumes order of countries from datasets are the same
+    temp_all = temp_confirmed_df[['City/Country', 'Confirmed','Latitude','Longitude']]
+    temp_all.insert(2,'Deaths', temp_deaths_df[['Deaths']])
+    temp_all.insert(2,'Recovered',temp_recovered_df[['Recovered']])
+    
+    fig = px.scatter_mapbox(temp_all, lat="Latitude", lon="Longitude", color="Deaths", size="Confirmed",
+                          #color_continuous_scale=px.colors.diverging.Picnic,
+                          size_max=50, hover_name="City/Country",
+                          #hover_data=["Confirmed", "Recovered", "Deaths"], 
+                          hover_data=["Confirmed", "Deaths"], 
+                          )
+    fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
+    
+    fig.update(
+            layout=dict(title=dict(x=0.5), paper_bgcolor=colors['background'] )
+        )
+    
+    fig.update_layout(
+        autosize=True,
+        height=750,
+        #width=1500,
+        font={
+            'family': 'Courier New, monospace',
+            'size': 18,
+            'color': 'white'
+        },
+        hovermode='closest',
+        legend=dict(
+            font={'color':colors['background']},
+            ),
+        mapbox=dict(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            style="dark",
+            # center=dict(
+            #     lat=56,
+            #     lon=324
+            # ),
+            pitch=0,
+            zoom=zoom
+            ),
+    )
+       
+    return fig
+
+def initial_pie():
+    ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
+        
+    filtered_ts_confirmed = ts_confirmed.iloc[:,-2]
+    filtered_ts_death = ts_death.iloc[:,-2]
+    filtered_ts_recovered = ts_recovered.iloc[:,-2]
+    
+    active = filtered_ts_confirmed.sum() - filtered_ts_death.sum() - filtered_ts_recovered.sum()
+    
+    labels = ['Recovered','Deaths','Active']
+    values = [filtered_ts_recovered.sum(),filtered_ts_death.sum(),active]
+
+    colors = ['#5cb85c', '#d9534f', '#f0ad4e']
+
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3, titlefont=dict(color='white', size=20) )])
+    
+    fig.update_traces(hoverinfo='label+percent+value', textinfo='none', textfont_size=20,
+                  marker=dict(colors=colors))
+    
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        legend = dict(font = dict(color='white')),
+                               transition={
+                            'duration': 500,
+                            'easing': 'cubic-in-out',}
+        )
+    
+    return fig
+
+def initial_graph():    
+    
+    ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
+    
+    x_axis = ts_confirmed.columns[4:-1]
+    
+    trace0 = go.Scatter(x=x_axis, y=ts_confirmed[x_axis].sum(),
+                        mode='lines',
+                        name='Confirrmed',
+                        line = {'color':'#0275d8'},
+                        fill='tozeroy'
+                        )
+    
+    trace1 = go.Scatter(x=x_axis, y=ts_death[x_axis].sum(),
+                    mode='lines',
+                    name='Deaths',
+                    line = {'color':'#d9534f'},
+                    fill='tozeroy'
+                    )
+
+    trace2 = go.Scatter(x=x_axis, y=ts_recovered[x_axis].sum(),
+                    mode='lines',
+                    name='Recovered',
+                    line = {'color':'#5cb85c'},
+                    fill='tozeroy'
+                    )
+    
+    data = [trace0, trace2, trace1]
+    
+    layout = go.Layout(paper_bgcolor='rgba(0,0,0,0)',
+                       plot_bgcolor='rgba(0,0,0,0)',
+                       font={
+                            'family': 'Courier New, monospace',
+                            'size': 18,
+                            'color': 'white'
+                            },
+                       #title=title,
+                       xaxis={'gridcolor':'rgb(46,47,47)','autorange': True,},
+                       yaxis={'gridcolor':'rgb(46,47,47)','autorange': True,'title':'Number of cases'},
+                       hovermode='closest',
+                       transition={
+                            'duration': 500,
+                            'easing': 'cubic-in-out',}
+                       )
+    
+    fig = go.Figure(data=data, layout=layout)
+    
+    fig.update_layout(
+        #title=title,
+        legend=dict(
+            x=0.01,
+            y=1,
+            traceorder="normal",
+            font=dict(
+                family="sans-serif",
+                size=12,
+                color="#f7f7f7"
+            ),
+            bgcolor="#292b2c",
+            bordercolor="#f7f7f7",
+            borderwidth=2,
+        )
+    )
+
+    return fig
 
 def get_outbrek_days():
     start = datetime.date(2019, 12, 31)
@@ -367,7 +533,7 @@ body = html.Div([
                         html.Div(
                             [
                                 #html.P('Cases Distribution', style={'color':colors['text'], 'textAlign':'left'}),
-                                dcc.Graph(id='pie-chart',)
+                                dcc.Graph(id='pie-chart', figure=initial_pie())
                             ]
                         )
                     ], type='circle'
@@ -377,7 +543,7 @@ body = html.Div([
             dbc.Col(
                 html.Div(
                     [
-                        dcc.Graph(id='time-series-confirmed'),
+                        dcc.Graph(id='time-series', figure=initial_graph()),
                     ]
             ), width=12, lg=9),
              
@@ -414,7 +580,7 @@ body = html.Div([
             html.Div([
               dcc.Graph(
                 id='corona-map',
-                #figure=fig,
+                figure=initial_map(),
                 style={'margin' : '0'}        
               ),
             ]),
@@ -667,7 +833,7 @@ def update_title(selected_nation):
         
     return title
 
-@app.callback(Output('time-series-confirmed','figure'), [Input('time-frame','value'), Input('nation','value')])
+@app.callback(Output('time-series','figure'), [Input('time-frame','value'), Input('nation','value')])
 def update_graph(unix_date, selected_nation):    
     
     ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
@@ -862,6 +1028,11 @@ def update_map(selected_nation, selected_case, click, unix_date):
         autosize=True,
         height=750,
         #width=1500,
+        font={
+            'family': 'Courier New, monospace',
+            'size': 18,
+            'color': 'white'
+        },
         hovermode='closest',
         legend=dict(
             font={'color':colors['background']},
