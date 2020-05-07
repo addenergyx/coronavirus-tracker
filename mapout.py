@@ -32,11 +32,11 @@ ts_confirmed, ts_death = get_jhu_dataset()
 # ts_confirmed= pd.read_csv('time_series_covid19_confirmed_global.csv')
 # ts_death= pd.read_csv('time_series_covid19_deaths_global.csv') 
 
-ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
+# ts_recovered = get_recovery_frame(ts_confirmed, ts_death)   
 
 clean_data(ts_confirmed)
 clean_data(ts_death)
-clean_data(ts_recovered)
+# clean_data(ts_recovered)
 
 def update_news():
     # Init

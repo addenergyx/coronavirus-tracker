@@ -304,7 +304,6 @@ def get_animation_from_postgres():
     engine = create_engine(db_URI)
     time_lapse = pd.read_sql_table("timelapse", con=engine, index_col='index')
     return time_lapse
-    
 
 def get_daily_report():
     
