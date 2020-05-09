@@ -21,9 +21,7 @@ encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 def Navbar():
     navbar = dbc.NavbarSimple( 
-        #id='navbar',
         children=[
-            #html.A(html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()), height="50px"), href="../", className='mr-auto'),
             dbc.NavItem(dbc.NavLink("Home", href="../", external_link=True,)),
             dbc.NavItem(dbc.NavLink("Tracker", href="../tracker/", external_link=True)),
             dbc.NavItem(dbc.NavLink("Map", href="../map/", external_link=True)),
@@ -151,6 +149,44 @@ def Banner():
                 className="footer-copyright", style={'text-align':'center'})
     return banner
     
+def Info():
+    
+    image_filename2 = 'assets/img/save_lives.png'
+    
+    encoded_image2 = base64.b64encode(open(image_filename2, 'rb').read())
+    
+    info = html.Div(
+            html.Img(src='data:image/png;base64,{}'.format(encoded_image2.decode()), height='300px'), style={'text-align': 'center'}
+        )
+    
+    return info
     
     
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
