@@ -151,14 +151,28 @@ def Banner():
     
 def Info():
     
-    image_filename2 = 'assets/img/save_lives.png'
+    image_filenames = ['assets/img/stay_home.png', 'assets/img/protect_nhs.png', 'assets/img/save_lives.png']
     
-    encoded_image2 = base64.b64encode(open(image_filename2, 'rb').read())
+    encoded_images = [base64.b64encode(open(x, 'rb').read()) for x in image_filenames] 
     
-    info = html.Div(
-            html.Img(src='data:image/png;base64,{}'.format(encoded_image2.decode()), height='300px'), style={'text-align': 'center'}
-        )
-    
+    info = dbc.Row([
+                dbc.Col(    
+                    html.Div(
+                        html.Img(src='data:image/png;base64,{}'.format(encoded_images[0].decode()), height='300px'), style={'text-align': 'center'}
+                    ), style={'background-color':'#FFC240'}, width=12, lg=4
+                ),
+                dbc.Col(    
+                    html.Div(
+                        html.Img(src='data:image/png;base64,{}'.format(encoded_images[1].decode()), height='300px'), style={'text-align': 'center'}
+                    ), style={'background-color':'#005EB8'}, width=12, lg=4
+                ),
+                dbc.Col(    
+                    html.Div(
+                        html.Img(src='data:image/png;base64,{}'.format(encoded_images[2].decode()), height='300px'), style={'text-align': 'center'}
+                    ), style={'background-color':'#D63230'}, width=12, lg=4
+                ),
+            ])
+
     return info
     
     

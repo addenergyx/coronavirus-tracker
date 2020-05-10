@@ -345,9 +345,9 @@ def update_map(selected_nation, selected_case):
 
 app.layout = Homepage()
 
-if __name__ == "__main__":
-    #app.run_server()
-    app.run_server(debug=True, use_reloader=False)
+# if __name__ == "__main__":
+#     #app.run_server()
+#     app.run_server(debug=True, use_reloader=False)
 
 
     
