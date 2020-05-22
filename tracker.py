@@ -1017,7 +1017,7 @@ def update_map(selected_nation, selected_case, click, unix_date):
                               #color_continuous_scale=px.colors.diverging.Picnic,
                               size_max=50, hover_name="City/Country",
                               #hover_data=["Confirmed", "Recovered", "Deaths"], 
-                              hover_data=["Confirmed", "Deaths", "Recovered"], 
+                              hover_data=["Confirmed", "Deaths"], 
                               )
         fig.update_traces(hoverinfo='text', marker=dict(sizemin=2),showlegend=False)
     
@@ -1053,9 +1053,9 @@ def update_map(selected_nation, selected_case, click, unix_date):
        
     return fig
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True, use_reloader=False)
-#     #app.run_server()
+if __name__ == '__main__':
+    app.run_server(debug=True, use_reloader=False)
+    #app.run_server()
 
 
 

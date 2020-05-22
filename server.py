@@ -8,7 +8,7 @@ from datetime import datetime
 import pandas as pd
 import os
 from urllib.parse import urlparse
-from flask import Flask, render_template, make_response, request
+from flask import Flask, render_template, make_response, request, redirect, url_for
 from newsapi import NewsApiClient
 import dateutil.parser as dparser
 
@@ -77,8 +77,6 @@ countries_code = {
 def get_year():
     return datetime.now().year
 
-
-
 def update_news(country):  
     # Init
     newsapi = NewsApiClient(api_key=os.getenv('NEWS_API_KEY'))
@@ -112,6 +110,9 @@ def update_news(country):
     return news_df
 
 @server.route('/')
+def tracker():
+    return redirect(url_for('/tracker/'))
+
 @server.route('/home')
 def home():
     return render_template('index.html', year=get_year())

@@ -22,7 +22,7 @@ encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 def Navbar():
     navbar = dbc.NavbarSimple( 
         children=[
-            dbc.NavItem(dbc.NavLink("Home", href="../", external_link=True,)),
+            dbc.NavItem(dbc.NavLink("Home", href="../home", external_link=True,)),
             dbc.NavItem(dbc.NavLink("Tracker", href="../tracker/", external_link=True)),
             dbc.NavItem(dbc.NavLink("Map", href="../map/", external_link=True)),
             dbc.NavItem(dbc.NavLink("Latest News", href="../news", external_link=True)),
