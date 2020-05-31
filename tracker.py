@@ -123,7 +123,7 @@ app = dash.Dash(name='tracker', server=server, url_base_pathname='/tracker/', ex
                     #{ 'name':'viewport','content':'width=device-width, initial-scale=1, shrink-to-fit=no' },## Fixes media query not showing
                     {
                         'name':'description',
-                        'title':'Coronavirus Tracker'
+                        'title':'Coronavirus Tracker',
                         'content':'This dashboard is designed to monitor events, deaths, and recoveries reported by several sources such as WHO and Johns Hopkins University on the n-Cov (Coronavirus). This constantly searches repositories and reviews all countries case studies.',
                         'keywords':'coronavirus,coronavirus news,coronavirus outbreak,coronavirus update,covid19,n-covid19, ncov',
                         'og:image':'https://ph-files.imgix.net/90568d34-4cf9-442d-87f4-8fe7bdee7a8d?auto=format&auto=compress&codec=mozjpeg&cs=strip&w=863.9665471923536&h=380&fit=max'
