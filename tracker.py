@@ -242,7 +242,7 @@ def initial_map():
     
     ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
     
-    date = ts_confirmed.columns[-2]
+    date = ts_recovered.columns[-2]
     
     zoom = 2    
     
@@ -341,7 +341,8 @@ def initial_graph():
     
     ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
     
-    x_axis = ts_confirmed.columns[4:-1]
+    #Recovery data gets updated late compared to datasets from JHU
+    x_axis = ts_recovered.columns[4:-1]
     
     trace0 = go.Scatter(x=x_axis, y=ts_confirmed[x_axis].sum(),
                         mode='lines',
