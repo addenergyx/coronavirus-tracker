@@ -48,8 +48,12 @@ ts_confirmed, ts_death = get_jhu_dataset()
 ts_confirmed.to_sql('confirmed', engine, if_exists='replace')
 ts_death.to_sql('deaths', engine, if_exists='replace')
 
+print("Deaths and confirmed updated")
+
 ts_recovered = get_recovery_dataset()
 ts_recovered.to_sql('recovered', engine, if_exists='replace')
+
+print("recoveries updated")
 
 timelapse = get_animation_frame()
 timelapse.to_sql('timelapse', engine, if_exists='replace')
