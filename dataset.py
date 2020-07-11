@@ -34,8 +34,10 @@ def getValues(dict):
 
 def get_jhu_dataset():
 
+    ## Country level
     covid19 = COVID19Py.COVID19("https://covid-tracker-us.herokuapp.com", data_source="jhu")
         
+    ## State level
     nyt = COVID19Py.COVID19("https://covid-tracker-us.herokuapp.com", data_source="nyt")
     
     ## Timeseries pull request
