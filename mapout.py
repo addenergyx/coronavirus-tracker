@@ -14,7 +14,7 @@ import dash_daq as daq
 from dash.dependencies import Input, Output
 import numpy as np
 from components import NationsDropdown, CasesDropdown, Navbar, Footer, Banner, Info
-from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, unix_to_date, getTimeScaleUnix, getTimeScale, get_animation_frame, get_animation_from_postgres
+from dataset import get_jhu_dataset, get_recovery_frame, getMarks, clean_data, unix_to_date, getTimeScaleUnix, get_data_from_postgres, getTimeScale, get_animation_frame, get_animation_from_postgres
 
 import plotly.express as px
 from newsapi import NewsApiClient
@@ -27,7 +27,8 @@ import datetime
 
 mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
 
-ts_confirmed, ts_death = get_jhu_dataset()
+#ts_confirmed, ts_death = get_jhu_dataset() 
+ts_confirmed, ts_death, ts_recovered = get_data_from_postgres()
 
 # ts_confirmed= pd.read_csv('time_series_covid19_confirmed_global.csv')
 # ts_death= pd.read_csv('time_series_covid19_deaths_global.csv') 
@@ -345,9 +346,9 @@ def update_map(selected_nation, selected_case):
 
 app.layout = Homepage()
 
-# if __name__ == "__main__":
-#     #app.run_server()
-#     app.run_server(debug=True, use_reloader=False)
+if __name__ == "__main__":
+    #app.run_server()
+    app.run_server(debug=True, use_reloader=False)
 
 
     
