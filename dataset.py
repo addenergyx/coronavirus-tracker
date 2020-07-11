@@ -29,13 +29,14 @@ def getValues(dict):
 ## Datasource backup, coronavirus-tracker-api.herokuapp.com frequently crashes
 # import requests
 # r = requests.get('https://covid-tracker-us.herokuapp.com/all')
+# r = requests.get('https://covid-tracker-us.herokuapp.com/v2/latest?source=nyt')
 # a = r.json()
 
 def get_jhu_dataset():
 
-    covid19 = COVID19Py.COVID19(data_source="jhu")
+    covid19 = COVID19Py.COVID19("https://covid-tracker-us.herokuapp.com", data_source="jhu")
         
-    nyt = COVID19Py.COVID19(data_source="nyt")
+    nyt = COVID19Py.COVID19("https://covid-tracker-us.herokuapp.com", data_source="nyt")
     
     ## Timeseries pull request
     data = covid19.getAll(timelines=True)
