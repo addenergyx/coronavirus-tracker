@@ -349,7 +349,7 @@ def get_daily_report():
     return daily_report
 
 def get_animation_frame():
-    lookup = pd.read_csv('UID_ISO_FIPS_LookUp_Table.csv')
+    lookup = pd.read_csv('UID_ISO_FIPS_LookUp_Table2.csv')
     
     url = 'https://pomber.github.io/covid19/timeseries.json'
     r = requests.get(url)
@@ -359,7 +359,7 @@ def get_animation_frame():
     df = pd.DataFrame(columns=['country','date','confirmed','deaths','recovered'])
     
     for country, data in countries.items():
-        #print(country)
+        print(country)
         a = lookup[lookup['Country_Region'] == country]
     
         for dic in data:
