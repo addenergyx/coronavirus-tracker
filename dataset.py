@@ -26,10 +26,15 @@ def getList(dict):
 def getValues(dict): 
     return list(dict.values())
 
+## Datasource backup, coronavirus-tracker-api.herokuapp.com frequently crashes
+# import requests
+# r = requests.get('https://covid-tracker-us.herokuapp.com/all')
+# a = r.json()
+
 def get_jhu_dataset():
 
     covid19 = COVID19Py.COVID19(data_source="jhu")
-    
+        
     nyt = COVID19Py.COVID19(data_source="nyt")
     
     ## Timeseries pull request
