@@ -116,7 +116,7 @@ mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
 
 #external_stylesheets =['https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
 #external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css','https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
-external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP, 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css']
+external_stylesheets =[dbc.themes.BOOTSTRAP, 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css']
 
 app = dash.Dash(name='tracker', server=server, url_base_pathname='/tracker/', external_stylesheets=external_stylesheets, 
                 meta_tags=[
@@ -491,7 +491,7 @@ body = html.Div([
                                        }
                                 )
         ],className='splash', style={
-                                      'background-image': 'linear-gradient(to top, #191A1A 0%, transparent 75%), url(https://pmcdeadline2.files.wordpress.com/2020/03/coronavirus.jpg)',
+                                      'background-image': 'linear-gradient(to top, #191A1A 0%, transparent 75%), url(https://www.isglobal.org/documents/10179/7759027/Coronavirus+SARS-CoV-2+de+CDC+en+Unsplash)',
                                       'background-position': 'center center',
                                       'background-repeat': 'no-repeat', # By default, a background image will repeat indefinitely, both vertically and horizontally
                                       'background-size' : 'cover',
