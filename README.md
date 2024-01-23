@@ -1,5 +1,7 @@
 # Coronavirus Tracker
 
+### Depreciated!! John Hopkins University no longer provides live updates for coronavirus as of 10/3/23
+
 Coronavirus Tracker is an interactive web dashboard of all cases around the world and the latest news reports. Created using Dash/Flask Python frameworks and using an AWS RDS database. https://www.coronavirustracker.co.uk/tracker/
 
 ![alt text](https://ph-files.imgix.net/90568d34-4cf9-442d-87f4-8fe7bdee7a8d?auto=format&auto=compress&codec=mozjpeg&cs=strip "Splash Page")
