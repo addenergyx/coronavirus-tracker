@@ -1,6 +1,7 @@
 # Coronavirus Tracker
 
-### Depreciated!! John Hopkins University no longer provides live updates for coronavirus as of 10/3/23
+### Depreciated!! John Hopkins University and  no longer provides live updates for coronavirus as of 10/3/23
+### https://covid-tracker-us.herokuapp.com api no longer active. 
 
 Coronavirus Tracker is an interactive web dashboard of all cases around the world and the latest news reports. Created using Dash/Flask Python frameworks and using an AWS RDS database. https://www.coronavirustracker.co.uk/tracker/
 
