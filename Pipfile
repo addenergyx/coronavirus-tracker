@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pandas = "*"
+dash = "*"
+dash-bootstrap-components = "*"
+dash-mantine-components = "*"
+dash-iconify = "*"
+boto3 = "*"
+gunicorn = "*"
+python-dotenv = "*"
+forex-python = "*"
+
+[dev-packages]
+pytest = "*"
+freezegun = "*"
+
+[requires]
+python_version = "3.9"
